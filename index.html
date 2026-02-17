@@ -240,11 +240,8 @@
     const MAX_DIGITS = 8;
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
 
-    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres validé) -----
+    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres tapé par l'utilisateur) -----
     let P = null;
-    
-    // ----- VARIABLE TEMPORAIRE POUR LE NOMBRE EN COURS DE SAISIE -----
-    let currentFourDigitNumber = null;
     
     // ----- VARIABLE POUR STOCKER LES DONNÉES DE L'API -----
     let apiData = null;
@@ -256,6 +253,9 @@
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
+    
+    // ----- DRAPEAU POUR SAVOIR SI ON EST EN TRAIN DE TAPER -----
+    let isTyping = false;
 
     // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
     function extractFourDigits(numberStr) {
@@ -268,12 +268,15 @@
       return digitsOnly.length === 4;
     }
 
-    // ----- FONCTION POUR VALIDER ET STOCKER LE NOMBRE À 4 CHIFFRES -----
+    // ----- FONCTION POUR VALIDER ET STOCKER LE NOMBRE À 4 CHIFFRES TAPÉ -----
     function validateAndStoreFourDigitNumber() {
       const currentText = display.innerText;
       
-      // Si on est en train d'afficher un résultat du cycle %, on ne stocke pas
+      // Ne pas stocker si on est en train d'afficher un résultat du cycle %
       if (currentText.includes('.') && currentText.length > 5) return;
+      
+      // Ne pas stocker les résultats de calcul (on vérifie si on était en train de taper)
+      if (!isTyping) return;
       
       if (hasFourDigits(currentText)) {
         // Extraire les 4 chiffres sans virgule
@@ -282,7 +285,7 @@
         // Si c'est le premier nombre à 4 chiffres qu'on valide
         if (P === null) {
           P = fourDigits;
-          console.log("P validé et stocké :", P);
+          console.log("P validé et stocké (nombre tapé) :", P);
           
           // Dès que P est stocké, on appelle l'API
           fetchApiData(P);
@@ -351,6 +354,9 @@
           break;
       }
       
+      // Quand on affiche un résultat du cycle %, on n'est pas en train de taper
+      isTyping = false;
+      
       updateACButton();
     };
 
@@ -365,10 +371,10 @@
       
       const currentText = display.innerText;
       
+      // Dès qu'on a tapé quelque chose ou qu'on a un nombre non nul, on met C
       if (currentText === '0' || 
           currentText === 'Erreur' || 
-          (waitingForSecondNumber && currentText === '0') ||
-          (firstNumber === null && operator === null && !waitingForSecondNumber)) {
+          (waitingForSecondNumber && currentText === '0')) {
         acButton.innerHTML = '<span>AC</span>';
       } else {
         acButton.innerHTML = '<span>C</span>';
@@ -385,20 +391,26 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
+        isTyping = false;
         // Note: on ne réinitialise PAS P et apiData ici (ils restent stockés)
         resetPercentCycle();
       } else {
         if (currentText === 'Erreur') {
           display.innerText = '0';
+          isTyping = false;
         } 
         else if (currentText.length === 1) {
           display.innerText = '0';
+          isTyping = false;
         }
         else if (currentText.length === 2 && currentText.startsWith('-')) {
           display.innerText = '0';
+          isTyping = false;
         }
         else {
           display.innerText = currentText.slice(0, -1);
+          // On reste en mode "typing" car on est en train de corriger
+          isTyping = true;
         }
       }
       
@@ -459,6 +471,7 @@
         }
         waitingForSecondNumber = false;
         resetPercentCycle();
+        isTyping = true; // On commence à taper
       } else {
         let newText = currentText;
         
@@ -475,7 +488,8 @@
         
         if (countDigits(newText) <= MAX_DIGITS) {
           display.innerText = newText;
-          // NE PAS STOCKER MAINTENANT, attendre validation
+          isTyping = true; // On est en train de taper
+          // NE PAS STOCKER MAINTENANT, attendre validation par opérateur
         }
       }
       
@@ -486,7 +500,7 @@
     window.setOperator = function(op) {
       const currentValue = parseFloat(display.innerText);
       
-      // VALIDER ET STOCKER le nombre à 4 chiffres avant l'opération
+      // VALIDER ET STOCKER le nombre à 4 chiffres tapé avant l'opération
       validateAndStoreFourDigitNumber();
 
       if (operator && waitingForSecondNumber) {
@@ -503,15 +517,18 @@
           firstNumber = null;
           operator = null;
           waitingForSecondNumber = false;
+          isTyping = false;
           updateACButton();
           return;
         } else {
           const formattedResult = formatDisplay(result);
           display.innerText = formattedResult;
           firstNumber = parseFloat(formattedResult);
+          isTyping = false; // C'est un résultat, pas en train de taper
         }
       } else {
         firstNumber = currentValue;
+        isTyping = false; // On a validé le nombre avec l'opérateur
       }
 
       operator = op;
@@ -533,6 +550,7 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
+        isTyping = false;
         updateACButton();
         return;
       }
@@ -542,8 +560,8 @@
       operator = null;
       waitingForSecondNumber = true;
       
-      // VALIDER ET STOCKER le nombre à 4 chiffres après le calcul
-      validateAndStoreFourDigitNumber();
+      // NE PAS STOCKER LE RÉSULTAT, même s'il a 4 chiffres
+      isTyping = false; // C'est un résultat, pas en train de taper
       
       resetPercentCycle();
       
@@ -575,8 +593,8 @@
       val = val * -1;
       display.innerText = formatDisplay(val);
       
-      // VALIDER ET STOCKER après changement de signe
-      validateAndStoreFourDigitNumber();
+      // NE PAS STOCKER, c'est juste un changement de signe
+      // On reste en mode typing si on était en train de taper
       
       resetPercentCycle();
       updateACButton();
