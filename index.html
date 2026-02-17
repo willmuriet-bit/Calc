@@ -177,7 +177,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
     addBtn.addEventListener('click', () => {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
+        deferredPrompt.userChoice.then(() => {
             addBtn.remove();
             deferredPrompt = null;
         });
