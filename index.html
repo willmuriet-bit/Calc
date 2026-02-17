@@ -41,7 +41,7 @@ html, body {
     overflow-x: auto;
 }
 
-/* grille boutons */
+/* Tous les boutons en même taille, grille uniforme */
 .buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -75,8 +75,8 @@ button:active { filter: brightness(1.3); }
 
 /* Bouton 0 étiré horizontalement uniquement */
 .zero {
-    grid-column: span 2; /* occupe 2 colonnes horizontalement */
-    border-radius: 50px;
+    grid-column: span 2; /* occupe deux colonnes horizontalement */
+    border-radius: 50px; /* légèrement ovale horizontalement */
 }
 
 @media screen and (min-width: 400px) {
@@ -119,7 +119,7 @@ button:active { filter: brightness(1.3); }
         <button class="dark-gray zero" onclick="appendNumber('0')"><span>0</span></button>
         <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
         <button class="orange" onclick="calculate()"><span>=</span></button>
-        <div></div> <!-- cellule vide pour garder 4 colonnes -->
+        <div></div> <!-- cellule vide pour garder la grille 4 colonnes -->
     </div>
 </div>
 
@@ -134,9 +134,7 @@ function appendNumber(number) {
         display.innerText = number === '.' ? '0.' : number;
         waitingForSecondNumber = false;
     } else {
-        // Limite à 10 caractères max
-        if (display.innerText.replace('.', '').length >= 10) return;
-
+        if (display.innerText.replace('.', '').length >= 10) return; // limite 10 chiffres
         if (display.innerText === "0" && number !== ".") display.innerText = number;
         else display.innerText += number;
     }
@@ -159,8 +157,7 @@ function calculate() {
         case '*': result = firstNumber * secondNumber; break;
         case '/': result = secondNumber!==0? firstNumber/secondNumber:"Erreur"; break;
     }
-    // Limite à 10 caractères max
-    display.innerText = result.toString().slice(0,10);
+    display.innerText = result.toString().slice(0,10); // limite 10 caractères
     firstNumber = result;
     operator = null;
 }
@@ -195,6 +192,5 @@ window.addEventListener('beforeinstallprompt', (e)=>{
     });
 });
 </script>
-
 </body>
 </html>
