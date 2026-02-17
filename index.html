@@ -98,11 +98,11 @@
 
     /* Style spécial pour le bouton zéro (forme pilule) */
     .btn-zero {
-      grid-column: span 2;           /* occupe 2 colonnes */
-      aspect-ratio: auto;            /* on enlève le ratio carré */
-      border-radius: 60px;           /* forme pilule */
-      justify-content: flex-start;   /* texte aligné à gauche */
-      padding-left: 1.8rem;          /* marge à gauche pour le 0 */
+      grid-column: span 2;
+      aspect-ratio: auto;
+      border-radius: 60px;
+      justify-content: flex-start;
+      padding-left: 1.8rem;
     }
 
     /* Palettes de couleurs */
@@ -201,12 +201,9 @@
     <button class="orange" onclick="setOperator('+')"><span>+</span></button>
 
     <!-- ligne 5 : 0 (double largeur), ., =  -->
-    <!-- Plus de div vide, le bouton 0 occupe 2 colonnes, 
-         le point et = prennent 1 colonne chacun, total = 4 colonnes -->
     <button class="dark-gray btn-zero" onclick="appendNumber('0')"><span>0</span></button>
     <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
     <button class="orange" onclick="calculate()"><span>=</span></button>
-    <!-- Plus besoin de div vide, la grille est parfaitement équilibrée -->
   </div>
 </div>
 
@@ -214,20 +211,73 @@
   (function() {
     // ----- ÉLÉMENTS DOM -----
     const display = document.getElementById('display');
+    
+    // ----- CONSTANTE POUR LA LIMITE DE CHIFFRES -----
+    const MAX_DIGITS = 10;
 
     // ----- ÉTAT DE LA CALCULATRICE -----
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
 
-    // ----- FONCTIONS D'AFFICHAGE -----
-    function updateDisplay(value) {
-      display.innerText = value;
+    // ----- FONCTION POUR COMPTER LES CHIFFRES (ignorer le point) -----
+    function countDigits(str) {
+      // Enlève le signe moins et le point décimal pour compter uniquement les chiffres
+      const withoutSign = str.replace('-', '');
+      const digitsOnly = withoutSign.replace('.', '');
+      return digitsOnly.length;
     }
 
-    // ----- GESTION DES CHIFFRES ET POINT -----
+    // ----- FONCTION POUR FORMATEUR L'AFFICHAGE AVEC LIMITE DE 10 CHIFFRES -----
+    function formatDisplay(value) {
+      // Si c'est un nombre, on le convertit en string
+      let str = String(value);
+      
+      // Gérer le cas spécial "Erreur"
+      if (str === 'Erreur') return 'Erreur';
+      
+      // Compter les chiffres actuels
+      const digitCount = countDigits(str);
+      
+      // Si on a moins de MAX_DIGITS, on garde tel quel
+      if (digitCount <= MAX_DIGITS) return str;
+      
+      // Si on a trop de chiffres, on doit tronquer
+      // On veut garder maximum MAX_DIGITS chiffres significatifs
+      
+      // Vérifier si c'est un nombre décimal
+      if (str.includes('.')) {
+        // Pour un décimal, on garde la partie entière et on limite les décimales
+        const parts = str.split('.');
+        const integerPart = parts[0].replace('-', '');
+        const sign = str.startsWith('-') ? '-' : '';
+        
+        // Si la partie entière a déjà MAX_DIGITS ou plus, on ignore les décimales
+        if (integerPart.length >= MAX_DIGITS) {
+          return sign + integerPart.substring(0, MAX_DIGITS);
+        } else {
+          // On peut garder quelques décimales
+          const maxDecimals = MAX_DIGITS - integerPart.length;
+          const decimalPart = parts[1].substring(0, maxDecimals);
+          return sign + integerPart + '.' + decimalPart;
+        }
+      } else {
+        // Pour un entier, on garde les premiers MAX_DIGITS chiffres
+        const sign = str.startsWith('-') ? '-' : '';
+        const absStr = str.replace('-', '');
+        return sign + absStr.substring(0, MAX_DIGITS);
+      }
+    }
+
+    // ----- GESTION DES CHIFFRES ET POINT AVEC LIMITE -----
     window.appendNumber = function(number) {
-      const currentText = display.innerText;
+      let currentText = display.innerText;
+      
+      // Gestion spéciale pour "Erreur"
+      if (currentText === 'Erreur') {
+        clearAll();
+        currentText = '0';
+      }
 
       if (waitingForSecondNumber) {
         if (number === '.') {
@@ -237,16 +287,25 @@
         }
         waitingForSecondNumber = false;
       } else {
+        let newText = currentText;
+        
         if (number === '.') {
+          // Éviter les multiples points
           if (currentText.includes('.')) return;
-          display.innerText = currentText + '.';
+          newText = currentText + '.';
         } else {
-          if (currentText === '0' || currentText === 'Erreur') {
-            display.innerText = number;
+          if (currentText === '0') {
+            newText = number;
           } else {
-            display.innerText = currentText + number;
+            newText = currentText + number;
           }
         }
+        
+        // Vérifier la limite de chiffres avant d'afficher
+        if (countDigits(newText) <= MAX_DIGITS) {
+          display.innerText = newText;
+        }
+        // Si dépasse MAX_DIGITS, on ignore l'entrée
       }
     };
 
@@ -262,10 +321,11 @@
       if (firstNumber !== null && operator && !waitingForSecondNumber) {
         let secondNumber = currentValue;
         let result = operate(operator, firstNumber, secondNumber);
-        if (result === 'Erreur') display.innerText = 'Erreur';
-        else {
-          display.innerText = String(result);
-          firstNumber = result;
+        if (result === 'Erreur') {
+          display.innerText = 'Erreur';
+        } else {
+          display.innerText = formatDisplay(result);
+          firstNumber = parseFloat(display.innerText);
         }
       } else {
         firstNumber = currentValue;
@@ -292,8 +352,8 @@
         return;
       }
 
-      display.innerText = String(result);
-      firstNumber = result;
+      display.innerText = formatDisplay(result);
+      firstNumber = parseFloat(display.innerText);
       operator = null;
       waitingForSecondNumber = true;
     };
@@ -311,7 +371,7 @@
       }
     }
 
-    // ----- FONCTIONS SPÉCIALES -----
+    // ----- FONCTIONS SPÉCIALES AVEC FORMATAGE -----
     window.clearAll = function() {
       display.innerText = '0';
       firstNumber = null;
@@ -321,28 +381,17 @@
 
     window.toggleSign = function() {
       let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
+      if (isNaN(val) || display.innerText === 'Erreur') return;
       val = val * -1;
-      display.innerText = String(val);
+      display.innerText = formatDisplay(val);
     };
 
     window.percentage = function() {
       let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
+      if (isNaN(val) || display.innerText === 'Erreur') return;
       val = val / 100;
-      display.innerText = String(val);
+      display.innerText = formatDisplay(val);
     };
-
-    // Gestion d'erreur : reset au prochain chiffre
-    window.addEventListener('load', function() {
-      const originalAppend = window.appendNumber;
-      window.appendNumber = function(n) {
-        if (display.innerText === 'Erreur') {
-          clearAll();
-        }
-        originalAppend(n);
-      };
-    });
 
     // ----- INSTALLATION PWA (beforeinstallprompt) -----
     let deferredPrompt;
@@ -372,17 +421,6 @@
       const btn = document.querySelector('.install-btn');
       if (btn) btn.remove();
     });
-
-    // Correction pour qu'après "Erreur" on puisse repartir
-    const originalClearAll = window.clearAll;
-    window.appendNumber = (function(original) {
-      return function(n) {
-        if (display.innerText === 'Erreur') {
-          originalClearAll();
-        }
-        original(n);
-      };
-    })(window.appendNumber);
 
   })();
 </script>
