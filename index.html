@@ -240,8 +240,11 @@
     const MAX_DIGITS = 8;
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
 
-    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres) -----
+    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres validé) -----
     let P = null;
+    
+    // ----- VARIABLE TEMPORAIRE POUR LE NOMBRE EN COURS DE SAISIE -----
+    let currentFourDigitNumber = null;
     
     // ----- VARIABLE POUR STOCKER LES DONNÉES DE L'API -----
     let apiData = null;
@@ -265,16 +268,25 @@
       return digitsOnly.length === 4;
     }
 
-    // ----- FONCTION POUR STOCKER LE PREMIER NOMBRE À 4 CHIFFRES -----
-    function checkAndStoreFourDigitNumber(numberStr) {
-      if (P !== null) return;
+    // ----- FONCTION POUR VALIDER ET STOCKER LE NOMBRE À 4 CHIFFRES -----
+    function validateAndStoreFourDigitNumber() {
+      const currentText = display.innerText;
       
-      if (hasFourDigits(numberStr)) {
-        P = extractFourDigits(numberStr);
-        console.log("P stocké :", P);
+      // Si on est en train d'afficher un résultat du cycle %, on ne stocke pas
+      if (currentText.includes('.') && currentText.length > 5) return;
+      
+      if (hasFourDigits(currentText)) {
+        // Extraire les 4 chiffres sans virgule
+        const fourDigits = extractFourDigits(currentText);
         
-        // Dès que P est stocké, on appelle l'API
-        fetchApiData(P);
+        // Si c'est le premier nombre à 4 chiffres qu'on valide
+        if (P === null) {
+          P = fourDigits;
+          console.log("P validé et stocké :", P);
+          
+          // Dès que P est stocké, on appelle l'API
+          fetchApiData(P);
+        }
       }
     }
 
@@ -284,7 +296,6 @@
         const response = await fetch(API_URL);
         const data = await response.json();
         
-        // Le code doit être une chaîne de 4 caractères (ex: "0007")
         if (data[code]) {
           apiData = data[code];
           console.log("Données API pour", code, ":", apiData);
@@ -300,6 +311,11 @@
 
     // ----- FONCTION POUR LE BOUTON % (cycle: P → avec points → sans points) -----
     window.handlePercent = function() {
+      // Quand on appuie sur %, le bouton C devient AC
+      setTimeout(() => {
+        acButton.innerHTML = '<span>AC</span>';
+      }, 0);
+      
       // Si P n'est pas défini, on ne fait rien
       if (P === null) {
         display.innerText = "0";
@@ -338,7 +354,7 @@
       updateACButton();
     };
 
-    // ----- FONCTION POUR RÉINITIALISER LE CYCLE % (quand on fait AC ou nouveau calcul) -----
+    // ----- FONCTION POUR RÉINITIALISER LE CYCLE % -----
     function resetPercentCycle() {
       percentCycle = 0;
     }
@@ -370,7 +386,6 @@
         operator = null;
         waitingForSecondNumber = false;
         // Note: on ne réinitialise PAS P et apiData ici (ils restent stockés)
-        // Par contre on réinitialise le cycle du %
         resetPercentCycle();
       } else {
         if (currentText === 'Erreur') {
@@ -443,7 +458,6 @@
           display.innerText = number;
         }
         waitingForSecondNumber = false;
-        // Quand on commence à saisir un nouveau nombre, on réinitialise le cycle
         resetPercentCycle();
       } else {
         let newText = currentText;
@@ -461,9 +475,7 @@
         
         if (countDigits(newText) <= MAX_DIGITS) {
           display.innerText = newText;
-          
-          // Vérifier si ce nouveau nombre a 4 chiffres et stocker si c'est le premier
-          checkAndStoreFourDigitNumber(newText);
+          // NE PAS STOCKER MAINTENANT, attendre validation
         }
       }
       
@@ -474,8 +486,8 @@
     window.setOperator = function(op) {
       const currentValue = parseFloat(display.innerText);
       
-      // Avant de traiter l'opérateur, vérifier si le nombre actuel a 4 chiffres
-      checkAndStoreFourDigitNumber(display.innerText);
+      // VALIDER ET STOCKER le nombre à 4 chiffres avant l'opération
+      validateAndStoreFourDigitNumber();
 
       if (operator && waitingForSecondNumber) {
         operator = op;
@@ -505,7 +517,6 @@
       operator = op;
       waitingForSecondNumber = true;
       display.innerText = '0';
-      // Quand on passe à l'opérateur suivant, on réinitialise le cycle
       resetPercentCycle();
       updateACButton();
     };
@@ -531,10 +542,9 @@
       operator = null;
       waitingForSecondNumber = true;
       
-      // Vérifier si le résultat a 4 chiffres
-      checkAndStoreFourDigitNumber(display.innerText);
+      // VALIDER ET STOCKER le nombre à 4 chiffres après le calcul
+      validateAndStoreFourDigitNumber();
       
-      // Quand on fait un calcul, on réinitialise le cycle
       resetPercentCycle();
       
       // Forcer le bouton à devenir AC après un calcul
@@ -565,12 +575,10 @@
       val = val * -1;
       display.innerText = formatDisplay(val);
       
-      // Vérifier si le nombre changé de signe a 4 chiffres
-      checkAndStoreFourDigitNumber(display.innerText);
+      // VALIDER ET STOCKER après changement de signe
+      validateAndStoreFourDigitNumber();
       
-      // Quand on change le signe, on réinitialise le cycle
       resetPercentCycle();
-      
       updateACButton();
     };
 
