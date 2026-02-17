@@ -24,7 +24,7 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* descend en bas */
+    justify-content: flex-end; /* descendre en bas */
     align-items: center;
     width: 100%;
     max-width: 400px;
@@ -52,9 +52,8 @@ html, body {
 }
 
 button {
+    aspect-ratio: 1/1; /* carré parfait */
     width: 100%;
-    padding-top: 100%; /* carré parfait */
-    position: relative;
     font-size: 24px;
     border: none;
     border-radius: 50%;
@@ -65,10 +64,7 @@ button {
 }
 
 button span {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
 
 .light-gray { background: #a5a5a5; color: black; }
@@ -79,7 +75,7 @@ button:active { filter: brightness(1.3); }
 
 /* Bouton 0 étiré horizontalement */
 .zero {
-    grid-column: span 2; /* occupe deux colonnes pour combler le vide */
+    grid-column: span 2; /* occupe 2 colonnes horizontalement */
     border-radius: 50px;
 }
 
@@ -123,7 +119,7 @@ button:active { filter: brightness(1.3); }
         <button class="dark-gray zero" onclick="appendNumber('0')"><span>0</span></button>
         <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
         <button class="orange" onclick="calculate()"><span>=</span></button>
-        <div></div> <!-- cellule vide pour garder la grille 4 colonnes -->
+        <div></div> <!-- cellule vide pour garder 4 colonnes -->
     </div>
 </div>
 
