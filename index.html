@@ -246,15 +246,15 @@
     // ----- VARIABLE P (stocke le premier nombre à 4 chiffres tapé par l'utilisateur) -----
     let P = null;
     
-    // ----- VARIABLE POUR STOCKER LES DONNÉES DE L'API -----
+    // ----- DONNÉES API -----
     let apiData = null;
     
-    // ----- COMPTEUR POUR LE BOUTON % (cycle: 0=P, 1=avec points, 2=sans points) -----
+    // ----- CYCLE DU % -----
     let percentCycle = 0;
     
-    // ----- DRAPEAU POUR SAVOIR SI LE BOUTON % EST EN MODE SECRET OU NORMAL -----
-    let percentMode = 'secret'; // 'secret' ou 'normal'
-
+    // ----- MODE SPÉCIAL (true = mode secret actif, false = mode normal) -----
+    let secretMode = true; // Par défaut, le mode secret est actif
+    
     // ----- ÉTAT -----
     let firstNumber = null;
     let operator = null;
@@ -271,19 +271,17 @@
 
     // ----- FONCTION POUR DÉMARRER L'APPUI LONG -----
     window.startLongPress = function() {
-      // Annuler tout timer existant
       if (longPressTimer) {
         clearTimeout(longPressTimer);
       }
       
-      // Démarrer un nouveau timer
       longPressTimer = setTimeout(() => {
-        // Après 1 seconde, réinitialiser le mode du bouton %
-        percentMode = 'normal';
+        // Désactiver le mode secret
+        secretMode = false;
         percentCycle = 0;
-        console.log("Mode % réinitialisé à 'normal'");
+        console.log("Mode secret désactivé (appui long)");
         
-        // Afficher un retour visuel (optionnel)
+        // Feedback visuel
         percentButton.style.filter = 'brightness(1.5)';
         setTimeout(() => {
           percentButton.style.filter = '';
@@ -306,38 +304,33 @@
       return numberStr.replace('.', '');
     }
 
-    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES -----
-    function hasFourDigits(numberStr) {
+    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES OU PLUS -----
+    function hasFourOrMoreDigits(numberStr) {
+      const digitsOnly = numberStr.replace('-', '').replace('.', '');
+      return digitsOnly.length >= 4;
+    }
+
+    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A EXACTEMENT 4 CHIFFRES -----
+    function hasExactlyFourDigits(numberStr) {
       const digitsOnly = numberStr.replace('-', '').replace('.', '');
       return digitsOnly.length === 4;
     }
 
-    // ----- FONCTION POUR VALIDER ET STOCKER LE NOMBRE À 4 CHIFFRES TAPÉ -----
+    // ----- FONCTION POUR VALIDER ET STOCKER P -----
     function validateAndStoreFourDigitNumber() {
       const currentText = display.innerText;
       
-      // Ne pas stocker si on est en train d'afficher un résultat du cycle %
       if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
-      
-      // Ne pas stocker les résultats de calcul
       if (!isTyping) return;
-      
-      // Ne pas stocker si on a déjà traité ce nombre
       if (currentNumberProcessed) return;
       
-      if (hasFourDigits(currentText)) {
-        // Extraire les 4 chiffres sans virgule
+      if (hasExactlyFourDigits(currentText)) {
         const fourDigits = extractFourDigits(currentText);
         
-        // Si c'est le premier nombre à 4 chiffres qu'on valide
         if (P === null) {
           P = fourDigits;
-          console.log("P validé et stocké (nombre tapé) :", P);
-          
-          // Dès que P est stocké, on appelle l'API
+          console.log("P validé et stocké :", P);
           fetchApiData(P);
-          
-          // Marquer ce nombre comme traité
           currentNumberProcessed = true;
         }
       }
@@ -353,19 +346,19 @@
           apiData = data[code];
           console.log("Données API pour", code, ":", apiData);
         } else {
-          console.log("Code non trouvé dans l'API:", code);
+          console.log("Code non trouvé:", code);
           apiData = null;
         }
       } catch (error) {
-        console.error("Erreur lors de l'appel API:", error);
+        console.error("Erreur API:", error);
         apiData = null;
       }
     }
 
     // ----- FONCTION POUR LE BOUTON % -----
     window.handlePercent = function() {
-      // Si on est en mode normal, faire un pourcentage classique
-      if (percentMode === 'normal') {
+      // Si le mode secret est désactivé, faire un pourcentage normal
+      if (!secretMode) {
         performNormalPercentage();
         return;
       }
@@ -374,7 +367,7 @@
       performSecretPercent();
     };
 
-    // ----- FONCTION POUR LE POURCENTAGE NORMAL -----
+    // ----- POURCENTAGE NORMAL -----
     function performNormalPercentage() {
       if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
       let val = parseFloat(display.innerText);
@@ -384,51 +377,40 @@
       updateACButton();
     }
 
-    // ----- FONCTION POUR LE MODE SECRET (cycle) -----
+    // ----- MODE SECRET (cycle) -----
     function performSecretPercent() {
-      // Quand on appuie sur %, le bouton C devient AC
       setTimeout(() => {
         acButton.innerHTML = '<span>AC</span>';
       }, 0);
       
-      // Si P n'est pas défini, on ne fait rien
       if (P === null) {
         display.innerText = "0";
         updateACButton();
         return;
       }
       
-      // Si les données API ne sont pas encore chargées
       if (apiData === null) {
         display.innerText = "Chargement...";
         updateACButton();
         return;
       }
       
-      // Cycle : 0 = P, 1 = avec points, 2 = sans points
       switch(percentCycle) {
         case 0:
-          // Afficher P
           display.innerText = P;
           percentCycle = 1;
           break;
-          
         case 1:
-          // Afficher avec points: ligne.across.page
           display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
           percentCycle = 2;
           break;
-          
         case 2:
-          // Afficher sans points: ligneacrosspage
           display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
-          percentCycle = 0; // Retour au début
+          percentCycle = 0;
           break;
       }
       
-      // Quand on affiche un résultat du cycle %, on n'est pas en train de taper
       isTyping = false;
-      
       updateACButton();
     }
 
@@ -443,7 +425,6 @@
       
       const currentText = display.innerText;
       
-      // Dès qu'on a quelque chose de différent de "0", on met C
       if (currentText === '0' || 
           currentText === 'Erreur' || 
           currentText === 'Chargement...' ||
@@ -454,7 +435,7 @@
       }
     }
 
-    // ----- FONCTION PRINCIPALE POUR AC/C -----
+    // ----- AC/C -----
     window.handleACorC = function() {
       const currentText = display.innerText;
       const buttonText = acButton.innerText;
@@ -466,8 +447,8 @@
         waitingForSecondNumber = false;
         isTyping = false;
         currentNumberProcessed = false;
-        // Note: on ne réinitialise PAS P et apiData ici (ils restent stockés)
         resetPercentCycle();
+        // Note: on ne réinitialise PAS secretMode ici (reste comme il est)
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
@@ -486,9 +467,7 @@
         }
         else {
           display.innerText = currentText.slice(0, -1);
-          // On reste en mode "typing" car on est en train de corriger
           isTyping = true;
-          // On réinitialise le flag de traitement car le nombre a changé
           currentNumberProcessed = false;
         }
       }
@@ -496,14 +475,191 @@
       updateACButton();
     };
 
-    // ----- FONCTION POUR COMPTER LES CHIFFRES -----
+    // ----- AJOUTER UN CHIFFRE -----
+    window.appendNumber = function(number) {
+      let currentText = display.innerText;
+      
+      if (currentText === 'Erreur' || currentText === 'Chargement...') {
+        display.innerText = '0';
+        currentText = '0';
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+      }
+
+      if (waitingForSecondNumber) {
+        if (number === '.') {
+          display.innerText = '0.';
+        } else {
+          display.innerText = number;
+        }
+        waitingForSecondNumber = false;
+        resetPercentCycle();
+        isTyping = true;
+        currentNumberProcessed = false;
+      } else {
+        let newText = currentText;
+        
+        if (number === '.') {
+          if (currentText.includes('.')) return;
+          newText = currentText + '.';
+        } else {
+          if (currentText === '0') {
+            newText = number;
+          } else {
+            newText = currentText + number;
+          }
+        }
+        
+        if (countDigits(newText) <= MAX_DIGITS) {
+          display.innerText = newText;
+          isTyping = true;
+          currentNumberProcessed = false;
+        }
+      }
+      
+      updateACButton();
+    };
+
+    // ----- OPÉRATEURS -----
+    window.setOperator = function(op) {
+      // Sauvegarder l'opérateur pour la division spéciale
+      const previousOperator = operator;
+      
+      validateAndStoreFourDigitNumber();
+
+      if (operator && waitingForSecondNumber) {
+        operator = op;
+        updateACButton();
+        return;
+      }
+
+      if (firstNumber !== null && operator && !waitingForSecondNumber) {
+        let secondNumber = parseFloat(display.innerText);
+        let result = operate(operator, firstNumber, secondNumber);
+        if (result === 'Erreur') {
+          display.innerText = 'Erreur';
+          firstNumber = null;
+          operator = null;
+          waitingForSecondNumber = false;
+          isTyping = false;
+          currentNumberProcessed = false;
+          updateACButton();
+          return;
+        } else {
+          const formattedResult = formatDisplay(result);
+          display.innerText = formattedResult;
+          firstNumber = parseFloat(formattedResult);
+          isTyping = false;
+          currentNumberProcessed = false;
+        }
+      } else {
+        firstNumber = parseFloat(display.innerText);
+        isTyping = false;
+      }
+
+      operator = op;
+      waitingForSecondNumber = true;
+      display.innerText = '0';
+      resetPercentCycle();
+      updateACButton();
+    };
+
+    // ----- CALCUL -----
+    window.calculate = function() {
+      if (!operator || waitingForSecondNumber) return;
+
+      const secondNumber = parseFloat(display.innerText);
+      
+      // VÉRIFICATION DE LA DIVISION SECRÈTE
+      if (secretMode && operator === '/' && P !== null && apiData !== null) {
+        // Vérifier si le deuxième nombre a 4 chiffres ou plus
+        if (hasFourOrMoreDigits(display.innerText)) {
+          // Afficher ligne.acrosspage avec across sur 2 chiffres
+          const acrossStr = apiData.across.toString().padStart(2, '0');
+          const result = `${apiData.line}.${acrossStr}${apiData.page}`;
+          display.innerText = result;
+          
+          // Réinitialiser pour la prochaine opération
+          firstNumber = null;
+          operator = null;
+          waitingForSecondNumber = true;
+          isTyping = false;
+          currentNumberProcessed = false;
+          resetPercentCycle();
+          
+          setTimeout(() => {
+            acButton.innerHTML = '<span>AC</span>';
+          }, 0);
+          
+          updateACButton();
+          return;
+        }
+      }
+      
+      // Sinon, calcul normal
+      const result = operate(operator, firstNumber, secondNumber);
+
+      if (result === 'Erreur') {
+        display.innerText = 'Erreur';
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+        isTyping = false;
+        currentNumberProcessed = false;
+        updateACButton();
+        return;
+      }
+
+      display.innerText = formatDisplay(result);
+      firstNumber = parseFloat(display.innerText);
+      operator = null;
+      waitingForSecondNumber = true;
+      
+      isTyping = false;
+      currentNumberProcessed = false;
+      resetPercentCycle();
+      
+      setTimeout(() => {
+        acButton.innerHTML = '<span>AC</span>';
+      }, 0);
+      
+      updateACButton();
+    };
+
+    // ----- OPÉRATIONS -----
+    function operate(op, a, b) {
+      switch(op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': 
+          if (b === 0) return 'Erreur';
+          return a / b;
+        default: return b;
+      }
+    }
+
+    // ----- TOGGLE SIGN -----
+    window.toggleSign = function() {
+      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+      let val = parseFloat(display.innerText);
+      if (isNaN(val)) return;
+      val = val * -1;
+      display.innerText = formatDisplay(val);
+      
+      currentNumberProcessed = false;
+      resetPercentCycle();
+      updateACButton();
+    };
+
+    // ----- FONCTIONS UTILITAIRES -----
     function countDigits(str) {
       const withoutSign = str.replace('-', '');
       const digitsOnly = withoutSign.replace('.', '');
       return digitsOnly.length;
     }
 
-    // ----- FORMATAGE 8 CHIFFRES MAX -----
     function formatDisplay(value) {
       let str = String(value);
       if (str === 'Erreur') return 'Erreur';
@@ -530,166 +686,7 @@
       }
     }
 
-    // ----- AJOUTER UN CHIFFRE -----
-    window.appendNumber = function(number) {
-      let currentText = display.innerText;
-      
-      if (currentText === 'Erreur' || currentText === 'Chargement...') {
-        display.innerText = '0';
-        currentText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-      }
-
-      if (waitingForSecondNumber) {
-        if (number === '.') {
-          display.innerText = '0.';
-        } else {
-          display.innerText = number;
-        }
-        waitingForSecondNumber = false;
-        resetPercentCycle();
-        isTyping = true; // On commence à taper
-        currentNumberProcessed = false; // Nouveau nombre, pas encore traité
-      } else {
-        let newText = currentText;
-        
-        if (number === '.') {
-          if (currentText.includes('.')) return;
-          newText = currentText + '.';
-        } else {
-          if (currentText === '0') {
-            newText = number;
-          } else {
-            newText = currentText + number;
-          }
-        }
-        
-        if (countDigits(newText) <= MAX_DIGITS) {
-          display.innerText = newText;
-          isTyping = true; // On est en train de taper
-          // On réinitialise le flag de traitement car le nombre a changé
-          currentNumberProcessed = false;
-          // NE PAS STOCKER MAINTENANT, attendre validation par opérateur
-        }
-      }
-      
-      updateACButton();
-    };
-
-    // ----- OPÉRATEURS -----
-    window.setOperator = function(op) {
-      const currentValue = parseFloat(display.innerText);
-      
-      // VALIDER ET STOCKER le nombre à 4 chiffres tapé avant l'opération
-      validateAndStoreFourDigitNumber();
-
-      if (operator && waitingForSecondNumber) {
-        operator = op;
-        updateACButton();
-        return;
-      }
-
-      if (firstNumber !== null && operator && !waitingForSecondNumber) {
-        let secondNumber = currentValue;
-        let result = operate(operator, firstNumber, secondNumber);
-        if (result === 'Erreur') {
-          display.innerText = 'Erreur';
-          firstNumber = null;
-          operator = null;
-          waitingForSecondNumber = false;
-          isTyping = false;
-          currentNumberProcessed = false;
-          updateACButton();
-          return;
-        } else {
-          const formattedResult = formatDisplay(result);
-          display.innerText = formattedResult;
-          firstNumber = parseFloat(formattedResult);
-          isTyping = false; // C'est un résultat, pas en train de taper
-          currentNumberProcessed = false;
-        }
-      } else {
-        firstNumber = currentValue;
-        isTyping = false; // On a validé le nombre avec l'opérateur
-        // Le flag currentNumberProcessed reste true si on a déjà traité ce nombre
-      }
-
-      operator = op;
-      waitingForSecondNumber = true;
-      display.innerText = '0';
-      resetPercentCycle();
-      updateACButton();
-    };
-
-    // ----- CALCUL -----
-    window.calculate = function() {
-      if (!operator || waitingForSecondNumber) return;
-
-      const secondNumber = parseFloat(display.innerText);
-      const result = operate(operator, firstNumber, secondNumber);
-
-      if (result === 'Erreur') {
-        display.innerText = 'Erreur';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-        isTyping = false;
-        currentNumberProcessed = false;
-        updateACButton();
-        return;
-      }
-
-      display.innerText = formatDisplay(result);
-      firstNumber = parseFloat(display.innerText);
-      operator = null;
-      waitingForSecondNumber = true;
-      
-      // NE PAS STOCKER LE RÉSULTAT, même s'il a 4 chiffres
-      isTyping = false; // C'est un résultat, pas en train de taper
-      currentNumberProcessed = false;
-      
-      resetPercentCycle();
-      
-      // Forcer le bouton à devenir AC après un calcul
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      updateACButton();
-    };
-
-    function operate(op, a, b) {
-      switch(op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': 
-          if (b === 0) return 'Erreur';
-          return a / b;
-        default: return b;
-      }
-    }
-
-    // ----- FONCTIONS SPÉCIALES -----
-    window.toggleSign = function() {
-      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
-      let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
-      val = val * -1;
-      display.innerText = formatDisplay(val);
-      
-      // NE PAS STOCKER, c'est juste un changement de signe
-      // On reste en mode typing si on était en train de taper
-      // Par contre, le nombre a changé donc on réinitialise le flag de traitement
-      currentNumberProcessed = false;
-      
-      resetPercentCycle();
-      updateACButton();
-    };
-
-    // Initialisation
+    // ----- INITIALISATION -----
     setTimeout(() => updateACButton(), 0);
 
     // ----- PWA -----
