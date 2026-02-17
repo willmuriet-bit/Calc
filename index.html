@@ -94,14 +94,18 @@
     .image-text {
       position: absolute;
       color: #808080; /* Gris */
-      font-size: 24px;
+      font-size: 12px; /* Taille divisée par 2 (était 24px) */
       font-weight: bold;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
       z-index: 6;
-      /* Position en cm (converti en px pour le web) */
-      /* 1cm ≈ 37.8px sur un écran standard 96dpi */
-      top: 291px; /* 7.7cm * 37.8 ≈ 291px */
-      left: 189px; /* 5cm * 37.8 ≈ 189px */
+      /* Nouvelles coordonnées :
+         - Abaissé de 1cm (+38px)
+         - Décalé à droite de 2cm (+76px)
+         Anciennes: top:291px, left:189px
+         Nouvelles: top:329px, left:265px
+      */
+      top: 329px;
+      left: 265px;
       transform: translate(-50%, -50%); /* Centre le texte sur le point */
       white-space: nowrap;
     }
@@ -215,9 +219,9 @@
         padding-left: 2.2rem;
       }
       .image-text {
-        /* Ajustement pour grands écrans */
-        top: 291px;
-        left: 189px;
+        /* Mêmes coordonnées pour grands écrans */
+        top: 329px;
+        left: 265px;
       }
     }
 
@@ -229,10 +233,10 @@
         font-size: clamp(3.2rem, 15vw, 5rem);
       }
       .image-text {
-        font-size: 18px;
+        font-size: 10px;
         /* Ajustement pour petits écrans */
-        top: 250px;
-        left: 160px;
+        top: 280px;
+        left: 220px;
       }
     }
 
@@ -291,7 +295,7 @@
 
         <!-- ligne 4 : 1,2,3, + -->
         <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
-        <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
+        <button class="dark-gray" id="btnTwo" onclick="appendNumber('2')"><span>2</span></button>
         <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
         <button class="orange" onclick="setOperator('+')"><span>+</span></button>
 
@@ -305,7 +309,7 @@
     <!-- IMAGE PLEIN ÉCRAN (avec texte par-dessus) -->
     <div class="fullscreen-image" id="fullscreenImage">
       <img src="capture.jpg" alt="Capture">
-      <div class="image-text" id="imageText">ligne/across/page</div>
+      <div class="image-text" id="imageText">ligne/across/page - P</div>
     </div>
   </div>
 
@@ -317,6 +321,7 @@
     const toggleSignButton = document.getElementById('toggleSignButton');
     const percentButton = document.getElementById('percentButton');
     const btnZero = document.getElementById('btnZero');
+    const btnTwo = document.getElementById('btnTwo');
     const calculator = document.getElementById('calculator');
     const fullscreenImage = document.getElementById('fullscreenImage');
     const imageText = document.getElementById('imageText');
@@ -358,12 +363,14 @@
 
     // ----- FONCTION POUR METTRE À JOUR LE TEXTE DE L'IMAGE -----
     function updateImageText() {
-      if (apiData) {
-        imageText.textContent = `${apiData.line}/${apiData.across}/${apiData.page}`;
+      if (apiData && P) {
+        imageText.textContent = `${apiData.line}/${apiData.across}/${apiData.page} - ${P}`;
+      } else if (apiData) {
+        imageText.textContent = `${apiData.line}/${apiData.across}/${apiData.page} - ?`;
       } else if (P) {
-        imageText.textContent = "Attente API...";
+        imageText.textContent = `?/?/? - ${P}`;
       } else {
-        imageText.textContent = "P non défini";
+        imageText.textContent = "?/?/? - ?";
       }
     }
 
@@ -410,13 +417,9 @@
       const target = document.elementFromPoint(touchCurrentX, touchCurrentY);
       
       // Le bouton 2 est le 2ème bouton de la ligne 4
-      // On vérifie si le texte du bouton est "2"
-      if (target && target.tagName === 'BUTTON') {
-        const buttonSpan = target.querySelector('span');
-        if (buttonSpan && buttonSpan.textContent === '2') {
-          // SWIPE RÉUSSI !!!
-          showImage();
-        }
+      if (target && (target === btnTwo || target.parentElement === btnTwo)) {
+        // SWIPE RÉUSSI !!!
+        showImage();
       }
       
       // Réinitialiser
