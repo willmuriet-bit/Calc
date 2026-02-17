@@ -1,53 +1,136 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Mon Site</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #111;
-            color: white;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculatrice</title>
 
-        header {
-            padding: 20px;
-            font-size: 28px;
-            font-weight: bold;
-        }
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #00bcd4;
-            color: white;
-        }
+.calculator {
+    width: 320px;
+    padding: 20px;
+}
 
-        button:hover {
-            background-color: #0097a7;
-        }
-    </style>
+.display {
+    color: white;
+    text-align: right;
+    font-size: 60px;
+    padding: 20px 10px;
+    word-wrap: break-word;
+    overflow-x: auto;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+button {
+    height: 70px;
+    font-size: 28px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+/* Gris clair (AC, +/-, %) */
+.light-gray {
+    background: #a5a5a5;
+    color: black;
+}
+
+/* Gris foncé (chiffres) */
+.dark-gray {
+    background: #333333;
+    color: white;
+}
+
+/* Orange (opérateurs) */
+.orange {
+    background: #ff9f0a;
+    color: white;
+}
+
+button:active {
+    filter: brightness(1.3);
+}
+
+/* Bouton 0 plus large */
+.zero {
+    grid-column: span 2;
+    border-radius: 35px;
+    text-align: left;
+    padding-left: 28px;
+}
+</style>
 </head>
 
 <body>
 
-<header>
-    Bienvenue sur mon site 🚀
-</header>
+<div class="calculator">
+    <div id="display" class="display">0</div>
 
-<p>Ceci est ma première page GitHub Pages.</p>
+    <div class="buttons">
+        <button class="light-gray" onclick="clearDisplay()">AC</button>
+        <button class="light-gray" onclick="append('%')">%</button>
+        <button class="light-gray" onclick="append('/')">÷</button>
+        <button class="orange" onclick="append('*')">×</button>
 
-<button onclick="alert('Bravo ! Ça fonctionne 🎉')">
-    Clique ici
-</button>
+        <button class="dark-gray" onclick="append('7')">7</button>
+        <button class="dark-gray" onclick="append('8')">8</button>
+        <button class="dark-gray" onclick="append('9')">9</button>
+        <button class="orange" onclick="append('-')">−</button>
+
+        <button class="dark-gray" onclick="append('4')">4</button>
+        <button class="dark-gray" onclick="append('5')">5</button>
+        <button class="dark-gray" onclick="append('6')">6</button>
+        <button class="orange" onclick="append('+')">+</button>
+
+        <button class="dark-gray" onclick="append('1')">1</button>
+        <button class="dark-gray" onclick="append('2')">2</button>
+        <button class="dark-gray" onclick="append('3')">3</button>
+        <button class="orange" onclick="calculate()">=</button>
+
+        <button class="dark-gray zero" onclick="append('0')">0</button>
+        <button class="dark-gray" onclick="append('.')">.</button>
+    </div>
+</div>
+
+<script>
+let display = document.getElementById("display");
+
+function append(value) {
+    if (display.innerText === "0") {
+        display.innerText = value;
+    } else {
+        display.innerText += value;
+    }
+}
+
+function clearDisplay() {
+    display.innerText = "0";
+}
+
+function calculate() {
+    try {
+        display.innerText = eval(display.innerText);
+    } catch {
+        display.innerText = "Erreur";
+    }
+}
+</script>
 
 </body>
 </html>
