@@ -34,129 +34,24 @@
       flex-direction: column;
     }
 
-    /* ===== BARRE DE STATUT SAMSUNG S23 ULTRA ===== */
-    .samsung-status-bar {
-      height: 42px;
-      background: #000000;
-      color: #ffffff;
-      font-family: 'Roboto', 'SamsungOne', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 15px;
-      font-weight: 500;
+    /* BARRE SIMPLE - JUSTE L'HEURE */
+    .simple-status-bar {
+      height: 44px;
+      background: black;
+      color: white;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 0 12px 0 16px;
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 10000;
-      letter-spacing: 0.2px;
-    }
-
-    .status-left {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .status-center {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-weight: 600;
       font-family: 'Roboto', monospace;
-      letter-spacing: 0.5px;
-    }
-
-    .status-right {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    /* Icônes réseau Samsung One UI */
-    .signal-icon {
-      display: flex;
-      gap: 2px;
-      align-items: center;
-    }
-
-    .signal-bar {
-      width: 4px;
-      height: 12px;
-      background: white;
-      border-radius: 1px;
-    }
-
-    .signal-bar.s1 { height: 6px; }
-    .signal-bar.s2 { height: 8px; }
-    .signal-bar.s3 { height: 10px; }
-    .signal-bar.s4 { height: 12px; }
-
-    .network-type {
-      font-size: 13px;
-      font-weight: 600;
-      margin-left: 2px;
-      color: #ffffff;
-    }
-
-    /* Icône Wi-Fi Samsung */
-    .wifi-icon-samsung {
-      font-size: 18px;
-      display: inline-block;
-      transform: rotate(45deg);
-      margin-right: 2px;
-    }
-
-    /* Icône batterie Samsung avec pourcentage */
-    .battery-container {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .battery-icon-samsung {
-      width: 24px;
-      height: 12px;
-      border: 1.5px solid white;
-      border-radius: 3px;
-      position: relative;
-    }
-
-    .battery-icon-samsung::after {
-      content: '';
-      position: absolute;
-      right: -4px;
-      top: 3px;
-      width: 3px;
-      height: 5px;
-      background: white;
-      border-radius: 1px;
-    }
-
-    .battery-level {
-      height: 8px;
-      background: #4CAF50;
-      margin: 1px;
-      width: 85%;
-      border-radius: 1px;
-    }
-
-    .battery-percent {
-      font-size: 13px;
+      font-size: 16px;
       font-weight: 500;
-      color: white;
-    }
-
-    /* Mode économie d'énergie */
-    .battery-saving .battery-level {
-      background: #FFB74D;
-    }
-
-    /* Mode urgent */
-    .battery-critical .battery-level {
-      background: #F44336;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
     }
 
     .calculator {
@@ -165,7 +60,7 @@
       width: 100%;
       max-width: 420px;
       height: 100%;
-      margin: 42px auto 0 auto; /* Décale sous notre barre */
+      margin: 44px auto 0 auto;
       background: black;
       padding: 0;
     }
@@ -287,461 +182,412 @@
         font-size: clamp(3.2rem, 15vw, 5rem);
       }
     }
-
-    .install-btn {
-      position: fixed;
-      top: 54px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ff9f0a;
-      color: white;
-      border: none;
-      border-radius: 30px;
-      padding: 0.7rem 1.5rem;
-      font-size: 1rem;
-      font-weight: 500;
-      z-index: 1000;
-      box-shadow: 0 4px 10px rgba(255,159,10,0.4);
-      cursor: pointer;
-      transition: opacity 0.2s;
-      white-space: nowrap;
-    }
-    .install-btn:hover {
-      opacity: 0.9;
-    }
   </style>
 </head>
 <body>
-  <!-- BARRE DE STATUT SAMSUNG S23 ULTRA (remplace la vraie) -->
-  <div class="samsung-status-bar" id="samsungStatusBar">
-    <div class="status-left">
-      <!-- Icônes de notification simulées (optionnel) -->
-      <span>🔔</span>
+  <!-- BARRE SIMPLE : JUSTE L'HEURE -->
+  <div class="simple-status-bar" id="simpleTime">14:30</div>
+
+  <div class="calculator">
+    <!-- AFFICHEUR -->
+    <div class="display-container">
+      <div id="display" class="display">0</div>
     </div>
-    
-    <!-- L'heure (centrée comme sur Samsung One UI) -->
-    <div class="status-center" id="samsungTime">14:30</div>
-    
-    <div class="status-right">
-      <!-- Réseau mobile 4G/5G -->
-      <div class="signal-icon">
-        <div class="signal-bar s1"></div>
-        <div class="signal-bar s2"></div>
-        <div class="signal-bar s3"></div>
-        <div class="signal-bar s4"></div>
-        <span class="network-type" id="networkType">5G</span>
-      </div>
-      
-      <!-- Wi-Fi -->
-      <span class="wifi-icon-samsung">📶</span>
-      
-      <!-- Batterie avec pourcentage -->
-      <div class="battery-container">
-        <div class="battery-icon-samsung">
-          <div class="battery-level" id="batteryLevel" style="width: 85%"></div>
-        </div>
-        <span class="battery-percent" id="batteryPercent">85%</span>
-      </div>
+
+    <!-- BOUTONS -->
+    <div class="buttons">
+      <!-- ligne 1 : AC/C, +/-, %, ÷ -->
+      <button class="light-gray" id="acButton" onclick="handleACorC()"><span>AC</span></button>
+      <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()"><span>+/-</span></button>
+      <button class="light-gray" id="percentButton" onclick="handlePercent()"><span>%</span></button>
+      <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
+
+      <!-- ligne 2 : 7,8,9, × -->
+      <button class="dark-gray" onclick="appendNumber('7')"><span>7</span></button>
+      <button class="dark-gray" onclick="appendNumber('8')"><span>8</span></button>
+      <button class="dark-gray" onclick="appendNumber('9')"><span>9</span></button>
+      <button class="orange" onclick="setOperator('*')"><span>×</span></button>
+
+      <!-- ligne 3 : 4,5,6, − -->
+      <button class="dark-gray" onclick="appendNumber('4')"><span>4</span></button>
+      <button class="dark-gray" onclick="appendNumber('5')"><span>5</span></button>
+      <button class="dark-gray" onclick="appendNumber('6')"><span>6</span></button>
+      <button class="orange" onclick="setOperator('-')"><span>−</span></button>
+
+      <!-- ligne 4 : 1,2,3, + -->
+      <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
+      <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
+      <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
+      <button class="orange" onclick="setOperator('+')"><span>+</span></button>
+
+      <!-- ligne 5 : 0, ., = -->
+      <button class="dark-gray btn-zero" onclick="appendNumber('0')"><span>0</span></button>
+      <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
+      <button class="orange" onclick="calculate()"><span>=</span></button>
     </div>
   </div>
 
-<div class="calculator">
-  <!-- AFFICHEUR -->
-  <div class="display-container">
-    <div id="display" class="display">0</div>
-  </div>
-
-  <!-- BOUTONS -->
-  <div class="buttons">
-    <!-- ligne 1 : AC/C, +/-, %, ÷ -->
-    <button class="light-gray" id="acButton" onclick="handleACorC()"><span>AC</span></button>
-    <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()"><span>+/-</span></button>
-    <button class="light-gray" id="percentButton" onclick="handlePercent()"><span>%</span></button>
-    <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
-
-    <!-- ligne 2 : 7,8,9, × -->
-    <button class="dark-gray" onclick="appendNumber('7')"><span>7</span></button>
-    <button class="dark-gray" onclick="appendNumber('8')"><span>8</span></button>
-    <button class="dark-gray" onclick="appendNumber('9')"><span>9</span></button>
-    <button class="orange" onclick="setOperator('*')"><span>×</span></button>
-
-    <!-- ligne 3 : 4,5,6, − -->
-    <button class="dark-gray" onclick="appendNumber('4')"><span>4</span></button>
-    <button class="dark-gray" onclick="appendNumber('5')"><span>5</span></button>
-    <button class="dark-gray" onclick="appendNumber('6')"><span>6</span></button>
-    <button class="orange" onclick="setOperator('-')"><span>−</span></button>
-
-    <!-- ligne 4 : 1,2,3, + -->
-    <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
-    <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
-    <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
-    <button class="orange" onclick="setOperator('+')"><span>+</span></button>
-
-    <!-- ligne 5 : 0, ., = -->
-    <button class="dark-gray btn-zero" onclick="appendNumber('0')"><span>0</span></button>
-    <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
-    <button class="orange" onclick="calculate()"><span>=</span></button>
-  </div>
-</div>
-
-<script>
-  (function() {
-    // ----- ÉLÉMENTS DOM -----
-    const display = document.getElementById('display');
-    const acButton = document.getElementById('acButton');
-    const toggleSignButton = document.getElementById('toggleSignButton');
-    const percentButton = document.getElementById('percentButton');
-    const samsungTime = document.getElementById('samsungTime');
-    const batteryLevel = document.getElementById('batteryLevel');
-    const batteryPercent = document.getElementById('batteryPercent');
-    const networkType = document.getElementById('networkType');
-    
-    // ----- CONSTANTES -----
-    const MAX_DIGITS = 8;
-    const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
-
-    // ----- VARIABLE P -----
-    let P = null;
-    
-    // ----- DONNÉES API -----
-    let apiData = null;
-    
-    // ----- CYCLE DU % -----
-    let percentCycle = 0;
-
-    // ----- ÉTAT CALCULATRICE -----
-    let firstNumber = null;
-    let operator = null;
-    let waitingForSecondNumber = false;
-    let isTyping = false;
-    let currentNumberProcessed = false;
-    
-    // ----- VARIABLES POUR LA COMBINAISON SECRÈTE -----
-    let toggleSignPressed = false;
-    let secretCombinationTimer = null;
-    let secretModeActive = false; // true = affiche ligne:across:page dans la barre
-    
-    // ----- TIMER POUR L'HEURE -----
-    let clockInterval;
-
-    // ----- FONCTION POUR METTRE À JOUR L'HEURE RÉELLE -----
-    function updateClock() {
-      if (secretModeActive) return; // Ne pas mettre à jour l'heure si mode secret actif
+  <script>
+    (function() {
+      // ----- ÉLÉMENTS DOM -----
+      const display = document.getElementById('display');
+      const acButton = document.getElementById('acButton');
+      const toggleSignButton = document.getElementById('toggleSignButton');
+      const percentButton = document.getElementById('percentButton');
+      const simpleTime = document.getElementById('simpleTime');
       
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      samsungTime.textContent = `${hours}:${minutes}`;
-    }
+      // ----- CONSTANTES -----
+      const MAX_DIGITS = 8;
+      const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
 
-    // ----- FONCTION POUR METTRE À JOUR LA BATTERIE (SIMULATION) -----
-    function updateBattery() {
-      // Dans une vraie app, on utiliserait l'API Battery
-      // Mais pour la démo, on simule une batterie qui varie
-      if (navigator.getBattery) {
-        navigator.getBattery().then(function(battery) {
-          const level = Math.round(battery.level * 100);
-          batteryLevel.style.width = level + '%';
-          batteryPercent.textContent = level + '%';
-          
-          // Changer la couleur selon le niveau
-          if (level <= 15) {
-            batteryLevel.style.background = '#F44336'; // Rouge
-          } else if (level <= 30) {
-            batteryLevel.style.background = '#FFB74D'; // Orange
-          } else {
-            batteryLevel.style.background = '#4CAF50'; // Vert
-          }
-        });
-      } else {
-        // Fallback pour les navigateurs sans API Battery
-        const randomLevel = Math.floor(Math.random() * 30) + 70; // 70-100%
-        batteryLevel.style.width = randomLevel + '%';
-        batteryPercent.textContent = randomLevel + '%';
-      }
-    }
-
-    // ----- FONCTION POUR METTRE À JOUR LE RÉSEAU (SIMULATION) -----
-    function updateNetwork() {
-      // Simulation du type de réseau
-      const networks = ['4G', '5G', 'LTE', '5G+'];
-      const randomIndex = Math.floor(Math.random() * networks.length);
-      networkType.textContent = networks[randomIndex];
-    }
-
-    // ----- FONCTION POUR AFFICHER LE SECRET DANS LA BARRE -----
-    function showSecretInStatusBar() {
-      if (apiData) {
-        samsungTime.textContent = `${apiData.line}:${apiData.across}:${apiData.page}`;
-        secretModeActive = true;
-      } else if (P) {
-        samsungTime.textContent = "Attente API...";
-      } else {
-        samsungTime.textContent = "P non défini";
-      }
-    }
-
-    // ----- FONCTION POUR REVENIR À L'HEURE NORMALE -----
-    function resetStatusBarToClock() {
-      secretModeActive = false;
-      updateClock();
-    }
-
-    // ----- GESTIONNAIRE SPÉCIAL POUR +/- -----
-    window.handleToggleSign = function() {
-      // Si on est en mode secret, un simple clic sur +/- désactive le mode secret
-      if (secretModeActive) {
-        resetStatusBarToClock();
-        toggleSignPressed = false;
-        return;
-      }
+      // ----- VARIABLE P -----
+      let P = null;
       
-      // Sinon, on active le "premier clic" de la combinaison
-      toggleSignPressed = true;
+      // ----- DONNÉES API -----
+      let apiData = null;
       
-      // Timer pour annuler la combinaison après 2 secondes
-      if (secretCombinationTimer) {
-        clearTimeout(secretCombinationTimer);
+      // ----- CYCLE DU % -----
+      let percentCycle = 0;
+
+      // ----- ÉTAT CALCULATRICE -----
+      let firstNumber = null;
+      let operator = null;
+      let waitingForSecondNumber = false;
+      let isTyping = false;
+      let currentNumberProcessed = false;
+      
+      // ----- VARIABLES POUR LA COMBINAISON SECRÈTE -----
+      let toggleSignPressed = false;
+      let secretCombinationTimer = null;
+      
+      // ----- TIMER POUR L'HEURE -----
+      let clockInterval;
+
+      // ----- FONCTION POUR METTRE À JOUR L'HEURE RÉELLE -----
+      function updateClock() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        simpleTime.textContent = `${hours}:${minutes}`;
       }
-      secretCombinationTimer = setTimeout(() => {
-        toggleSignPressed = false;
-        secretCombinationTimer = null;
-      }, 2000);
-      
-      // Aussi exécuter la fonction normale de toggleSign
-      performToggleSign();
-    };
 
-    // ----- FONCTION NORMALE DE TOGGLE SIGN -----
-    function performToggleSign() {
-      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
-      let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
-      val = val * -1;
-      display.innerText = formatDisplay(val);
-      currentNumberProcessed = false;
-      percentCycle = 0;
-      updateACButton();
-    }
+      // ----- FONCTION POUR DEMANDER LA PERMISSION NOTIFICATION -----
+      function requestNotificationPermission() {
+        if (Notification.permission === "granted") {
+          return true;
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission();
+        }
+        return false;
+      }
 
-    // ----- GESTIONNAIRE SPÉCIAL POUR % -----
-    window.handlePercent = function() {
-      // Vérifier si c'est le deuxième clic de la combinaison secrète
-      if (toggleSignPressed) {
-        // Combinaison détectée : +/- puis %
-        showSecretInStatusBar();
+      // ----- FONCTION POUR AFFICHER LA NOTIFICATION SECRÈTE -----
+      function showSecretNotification() {
+        if (!apiData) return;
         
-        // Réinitialiser la combinaison
-        toggleSignPressed = false;
+        const secretText = `${apiData.line}.${apiData.across}.${apiData.page}`;
+        
+        if (Notification.permission === "granted") {
+          const notification = new Notification("🔢 Code secret", {
+            body: `${secretText} (appuyez pour copier)`,
+            icon: "/icon-192.png",
+            tag: "secret-code",
+            requireInteraction: true,
+            silent: false
+          });
+          
+          notification.onclick = function() {
+            navigator.clipboard.writeText(secretText);
+            this.close();
+          };
+          
+        } else {
+          requestNotificationPermission();
+        }
+      }
+
+      // ----- GESTIONNAIRE SPÉCIAL POUR +/- -----
+      window.handleToggleSign = function() {
+        // Activer le "premier clic" de la combinaison
+        toggleSignPressed = true;
+        
+        // Timer pour annuler la combinaison après 2 secondes
         if (secretCombinationTimer) {
           clearTimeout(secretCombinationTimer);
+        }
+        secretCombinationTimer = setTimeout(() => {
+          toggleSignPressed = false;
           secretCombinationTimer = null;
-        }
+        }, 2000);
         
-        // Ne pas exécuter le comportement normal de %
-        return;
-      }
-      
-      // Sinon, comportement normal de %
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      if (P === null) {
-        display.innerText = "0";
-        updateACButton();
-        return;
-      }
-      
-      if (apiData === null) {
-        display.innerText = "Chargement...";
-        updateACButton();
-        return;
-      }
-      
-      switch(percentCycle) {
-        case 0:
-          display.innerText = P;
-          percentCycle = 1;
-          break;
-        case 1:
-          display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
-          percentCycle = 2;
-          break;
-        case 2:
-          display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
-          percentCycle = 0;
-          break;
-      }
-      
-      isTyping = false;
-      updateACButton();
-    };
+        // Fonction normale de toggleSign
+        performToggleSign();
+      };
 
-    // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
-    function extractFourDigits(numberStr) {
-      return numberStr.replace('.', '');
-    }
-
-    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES -----
-    function hasFourDigits(numberStr) {
-      const digitsOnly = numberStr.replace('-', '').replace('.', '');
-      return digitsOnly.length === 4;
-    }
-
-    // ----- FONCTION POUR VALIDER ET STOCKER P -----
-    function validateAndStoreFourDigitNumber() {
-      const currentText = display.innerText;
-      
-      if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
-      if (!isTyping) return;
-      if (currentNumberProcessed) return;
-      
-      if (hasFourDigits(currentText)) {
-        const fourDigits = extractFourDigits(currentText);
-        
-        if (P === null) {
-          P = fourDigits;
-          console.log("P validé et stocké :", P);
-          fetchApiData(P);
-          currentNumberProcessed = true;
-        }
-      }
-    }
-
-    // ----- FONCTION POUR APPELER L'API -----
-    async function fetchApiData(code) {
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        if (data[code]) {
-          apiData = data[code];
-          console.log("Données API pour", code, ":", apiData);
-        } else {
-          console.log("Code non trouvé:", code);
-          apiData = null;
-        }
-      } catch (error) {
-        console.error("Erreur API:", error);
-        apiData = null;
-      }
-    }
-
-    // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
-    function updateACButton() {
-      if (!acButton) return;
-      
-      const currentText = display.innerText;
-      
-      if (currentText === '0' || 
-          currentText === 'Erreur' || 
-          currentText === 'Chargement...' ||
-          (waitingForSecondNumber && currentText === '0')) {
-        acButton.innerHTML = '<span>AC</span>';
-      } else {
-        acButton.innerHTML = '<span>C</span>';
-      }
-    }
-
-    // ----- FONCTION PRINCIPALE POUR AC/C -----
-    window.handleACorC = function() {
-      const currentText = display.innerText;
-      const buttonText = acButton.innerText;
-      
-      if (buttonText === 'AC') {
-        display.innerText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-        isTyping = false;
+      // ----- FONCTION NORMALE DE TOGGLE SIGN -----
+      function performToggleSign() {
+        if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+        let val = parseFloat(display.innerText);
+        if (isNaN(val)) return;
+        val = val * -1;
+        display.innerText = formatDisplay(val);
         currentNumberProcessed = false;
         percentCycle = 0;
-        // AC ne modifie PAS l'heure
-      } else {
-        if (currentText === 'Erreur' || currentText === 'Chargement...') {
-          display.innerText = '0';
-          isTyping = false;
-          currentNumberProcessed = false;
-        } 
-        else if (currentText.length === 1) {
-          display.innerText = '0';
-          isTyping = false;
-          currentNumberProcessed = false;
-        }
-        else if (currentText.length === 2 && currentText.startsWith('-')) {
-          display.innerText = '0';
-          isTyping = false;
-          currentNumberProcessed = false;
-        }
-        else {
-          display.innerText = currentText.slice(0, -1);
-          isTyping = true;
-          currentNumberProcessed = false;
-        }
-      }
-      
-      updateACButton();
-    };
-
-    // ----- AJOUTER UN CHIFFRE -----
-    window.appendNumber = function(number) {
-      let currentText = display.innerText;
-      
-      if (currentText === 'Erreur' || currentText === 'Chargement...') {
-        display.innerText = '0';
-        currentText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
+        updateACButton();
       }
 
-      if (waitingForSecondNumber) {
-        if (number === '.') {
-          display.innerText = '0.';
-        } else {
-          display.innerText = number;
+      // ----- GESTIONNAIRE SPÉCIAL POUR % -----
+      window.handlePercent = function() {
+        // Vérifier si c'est le deuxième clic de la combinaison secrète
+        if (toggleSignPressed) {
+          // Combinaison détectée : +/- puis %
+          showSecretNotification();
+          
+          // Réinitialiser la combinaison
+          toggleSignPressed = false;
+          if (secretCombinationTimer) {
+            clearTimeout(secretCombinationTimer);
+            secretCombinationTimer = null;
+          }
+          
+          // Ne pas exécuter le comportement normal de %
+          return;
         }
-        waitingForSecondNumber = false;
-        isTyping = true;
-        currentNumberProcessed = false;
-      } else {
-        let newText = currentText;
         
-        if (number === '.') {
-          if (currentText.includes('.')) return;
-          newText = currentText + '.';
-        } else {
-          if (currentText === '0') {
-            newText = number;
+        // Sinon, comportement normal de %
+        setTimeout(() => {
+          acButton.innerHTML = '<span>AC</span>';
+        }, 0);
+        
+        if (P === null) {
+          display.innerText = "0";
+          updateACButton();
+          return;
+        }
+        
+        if (apiData === null) {
+          display.innerText = "Chargement...";
+          updateACButton();
+          return;
+        }
+        
+        switch(percentCycle) {
+          case 0:
+            display.innerText = P;
+            percentCycle = 1;
+            break;
+          case 1:
+            display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
+            percentCycle = 2;
+            break;
+          case 2:
+            display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
+            percentCycle = 0;
+            break;
+        }
+        
+        isTyping = false;
+        updateACButton();
+      };
+
+      // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
+      function extractFourDigits(numberStr) {
+        return numberStr.replace('.', '');
+      }
+
+      // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES -----
+      function hasFourDigits(numberStr) {
+        const digitsOnly = numberStr.replace('-', '').replace('.', '');
+        return digitsOnly.length === 4;
+      }
+
+      // ----- FONCTION POUR VALIDER ET STOCKER P -----
+      function validateAndStoreFourDigitNumber() {
+        const currentText = display.innerText;
+        
+        if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
+        if (!isTyping) return;
+        if (currentNumberProcessed) return;
+        
+        if (hasFourDigits(currentText)) {
+          const fourDigits = extractFourDigits(currentText);
+          
+          if (P === null) {
+            P = fourDigits;
+            console.log("P validé et stocké :", P);
+            fetchApiData(P);
+            currentNumberProcessed = true;
+          }
+        }
+      }
+
+      // ----- FONCTION POUR APPELER L'API -----
+      async function fetchApiData(code) {
+        try {
+          const response = await fetch(API_URL);
+          const data = await response.json();
+          
+          if (data[code]) {
+            apiData = data[code];
+            console.log("Données API pour", code, ":", apiData);
           } else {
-            newText = currentText + number;
+            console.log("Code non trouvé:", code);
+            apiData = null;
+          }
+        } catch (error) {
+          console.error("Erreur API:", error);
+          apiData = null;
+        }
+      }
+
+      // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
+      function updateACButton() {
+        if (!acButton) return;
+        
+        const currentText = display.innerText;
+        
+        if (currentText === '0' || 
+            currentText === 'Erreur' || 
+            currentText === 'Chargement...' ||
+            (waitingForSecondNumber && currentText === '0')) {
+          acButton.innerHTML = '<span>AC</span>';
+        } else {
+          acButton.innerHTML = '<span>C</span>';
+        }
+      }
+
+      // ----- FONCTION PRINCIPALE POUR AC/C -----
+      window.handleACorC = function() {
+        const currentText = display.innerText;
+        const buttonText = acButton.innerText;
+        
+        if (buttonText === 'AC') {
+          display.innerText = '0';
+          firstNumber = null;
+          operator = null;
+          waitingForSecondNumber = false;
+          isTyping = false;
+          currentNumberProcessed = false;
+          percentCycle = 0;
+        } else {
+          if (currentText === 'Erreur' || currentText === 'Chargement...') {
+            display.innerText = '0';
+            isTyping = false;
+            currentNumberProcessed = false;
+          } 
+          else if (currentText.length === 1) {
+            display.innerText = '0';
+            isTyping = false;
+            currentNumberProcessed = false;
+          }
+          else if (currentText.length === 2 && currentText.startsWith('-')) {
+            display.innerText = '0';
+            isTyping = false;
+            currentNumberProcessed = false;
+          }
+          else {
+            display.innerText = currentText.slice(0, -1);
+            isTyping = true;
+            currentNumberProcessed = false;
           }
         }
         
-        if (countDigits(newText) <= MAX_DIGITS) {
-          display.innerText = newText;
+        updateACButton();
+      };
+
+      // ----- AJOUTER UN CHIFFRE -----
+      window.appendNumber = function(number) {
+        let currentText = display.innerText;
+        
+        if (currentText === 'Erreur' || currentText === 'Chargement...') {
+          display.innerText = '0';
+          currentText = '0';
+          firstNumber = null;
+          operator = null;
+          waitingForSecondNumber = false;
+        }
+
+        if (waitingForSecondNumber) {
+          if (number === '.') {
+            display.innerText = '0.';
+          } else {
+            display.innerText = number;
+          }
+          waitingForSecondNumber = false;
           isTyping = true;
           currentNumberProcessed = false;
+        } else {
+          let newText = currentText;
+          
+          if (number === '.') {
+            if (currentText.includes('.')) return;
+            newText = currentText + '.';
+          } else {
+            if (currentText === '0') {
+              newText = number;
+            } else {
+              newText = currentText + number;
+            }
+          }
+          
+          if (countDigits(newText) <= MAX_DIGITS) {
+            display.innerText = newText;
+            isTyping = true;
+            currentNumberProcessed = false;
+          }
         }
-      }
-      
-      updateACButton();
-    };
-
-    // ----- OPÉRATEURS -----
-    window.setOperator = function(op) {
-      validateAndStoreFourDigitNumber();
-
-      if (operator && waitingForSecondNumber) {
-        operator = op;
+        
         updateACButton();
-        return;
-      }
+      };
 
-      if (firstNumber !== null && operator && !waitingForSecondNumber) {
-        let secondNumber = parseFloat(display.innerText);
-        let result = operate(operator, firstNumber, secondNumber);
+      // ----- OPÉRATEURS -----
+      window.setOperator = function(op) {
+        validateAndStoreFourDigitNumber();
+
+        if (operator && waitingForSecondNumber) {
+          operator = op;
+          updateACButton();
+          return;
+        }
+
+        if (firstNumber !== null && operator && !waitingForSecondNumber) {
+          let secondNumber = parseFloat(display.innerText);
+          let result = operate(operator, firstNumber, secondNumber);
+          if (result === 'Erreur') {
+            display.innerText = 'Erreur';
+            firstNumber = null;
+            operator = null;
+            waitingForSecondNumber = false;
+            isTyping = false;
+            currentNumberProcessed = false;
+            updateACButton();
+            return;
+          } else {
+            const formattedResult = formatDisplay(result);
+            display.innerText = formattedResult;
+            firstNumber = parseFloat(formattedResult);
+            isTyping = false;
+            currentNumberProcessed = false;
+          }
+        } else {
+          firstNumber = parseFloat(display.innerText);
+          isTyping = false;
+        }
+
+        operator = op;
+        waitingForSecondNumber = true;
+        display.innerText = '0';
+        percentCycle = 0;
+        updateACButton();
+      };
+
+      // ----- CALCUL -----
+      window.calculate = function() {
+        if (!operator || waitingForSecondNumber) return;
+
+        const secondNumber = parseFloat(display.innerText);
+        const result = operate(operator, firstNumber, secondNumber);
+
         if (result === 'Erreur') {
           display.innerText = 'Erreur';
           firstNumber = null;
@@ -751,176 +597,99 @@
           currentNumberProcessed = false;
           updateACButton();
           return;
-        } else {
-          const formattedResult = formatDisplay(result);
-          display.innerText = formattedResult;
-          firstNumber = parseFloat(formattedResult);
-          isTyping = false;
-          currentNumberProcessed = false;
         }
-      } else {
+
+        display.innerText = formatDisplay(result);
         firstNumber = parseFloat(display.innerText);
-        isTyping = false;
-      }
-
-      operator = op;
-      waitingForSecondNumber = true;
-      display.innerText = '0';
-      percentCycle = 0;
-      updateACButton();
-    };
-
-    // ----- CALCUL -----
-    window.calculate = function() {
-      if (!operator || waitingForSecondNumber) return;
-
-      const secondNumber = parseFloat(display.innerText);
-      const result = operate(operator, firstNumber, secondNumber);
-
-      if (result === 'Erreur') {
-        display.innerText = 'Erreur';
-        firstNumber = null;
         operator = null;
-        waitingForSecondNumber = false;
+        waitingForSecondNumber = true;
+        
         isTyping = false;
         currentNumberProcessed = false;
-        updateACButton();
-        return;
-      }
-
-      display.innerText = formatDisplay(result);
-      firstNumber = parseFloat(display.innerText);
-      operator = null;
-      waitingForSecondNumber = true;
-      
-      isTyping = false;
-      currentNumberProcessed = false;
-      percentCycle = 0;
-      
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      updateACButton();
-    };
-
-    // ----- FONCTIONS UTILITAIRES -----
-    function countDigits(str) {
-      const withoutSign = str.replace('-', '');
-      const digitsOnly = withoutSign.replace('.', '');
-      return digitsOnly.length;
-    }
-
-    function formatDisplay(value) {
-      let str = String(value);
-      if (str === 'Erreur') return 'Erreur';
-      
-      const digitCount = countDigits(str);
-      if (digitCount <= MAX_DIGITS) return str;
-      
-      if (str.includes('.')) {
-        const parts = str.split('.');
-        const integerPart = parts[0].replace('-', '');
-        const sign = str.startsWith('-') ? '-' : '';
+        percentCycle = 0;
         
-        if (integerPart.length >= MAX_DIGITS) {
-          return sign + integerPart.substring(0, MAX_DIGITS);
+        setTimeout(() => {
+          acButton.innerHTML = '<span>AC</span>';
+        }, 0);
+        
+        updateACButton();
+      };
+
+      // ----- FONCTIONS UTILITAIRES -----
+      function countDigits(str) {
+        const withoutSign = str.replace('-', '');
+        const digitsOnly = withoutSign.replace('.', '');
+        return digitsOnly.length;
+      }
+
+      function formatDisplay(value) {
+        let str = String(value);
+        if (str === 'Erreur') return 'Erreur';
+        
+        const digitCount = countDigits(str);
+        if (digitCount <= MAX_DIGITS) return str;
+        
+        if (str.includes('.')) {
+          const parts = str.split('.');
+          const integerPart = parts[0].replace('-', '');
+          const sign = str.startsWith('-') ? '-' : '';
+          
+          if (integerPart.length >= MAX_DIGITS) {
+            return sign + integerPart.substring(0, MAX_DIGITS);
+          } else {
+            const maxDecimals = MAX_DIGITS - integerPart.length;
+            const decimalPart = parts[1].substring(0, maxDecimals);
+            return sign + integerPart + '.' + decimalPart;
+          }
         } else {
-          const maxDecimals = MAX_DIGITS - integerPart.length;
-          const decimalPart = parts[1].substring(0, maxDecimals);
-          return sign + integerPart + '.' + decimalPart;
+          const sign = str.startsWith('-') ? '-' : '';
+          const absStr = str.replace('-', '');
+          return sign + absStr.substring(0, MAX_DIGITS);
         }
-      } else {
-        const sign = str.startsWith('-') ? '-' : '';
-        const absStr = str.replace('-', '');
-        return sign + absStr.substring(0, MAX_DIGITS);
       }
-    }
 
-    function operate(op, a, b) {
-      switch(op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': 
-          if (b === 0) return 'Erreur';
-          return a / b;
-        default: return b;
+      function operate(op, a, b) {
+        switch(op) {
+          case '+': return a + b;
+          case '-': return a - b;
+          case '*': return a * b;
+          case '/': 
+            if (b === 0) return 'Erreur';
+            return a / b;
+          default: return b;
+        }
       }
-    }
 
-    // ----- INITIALISATION -----
-    updateClock();
-    updateBattery();
-    updateNetwork();
-    
-    clockInterval = setInterval(updateClock, 1000);
-    setInterval(updateNetwork, 5000); // Change le réseau toutes les 5s
-    
-    // Mettre à jour la batterie toutes les 30s
-    if (navigator.getBattery) {
-      navigator.getBattery().then(function(battery) {
-        battery.addEventListener('levelchange', updateBattery);
+      // ----- INITIALISATION -----
+      updateClock();
+      clockInterval = setInterval(updateClock, 1000);
+      setTimeout(() => updateACButton(), 0);
+
+      // ----- ACTIVER LE PLEIN ÉCRAN POUR CACHER LA VRAIE BARRE -----
+      function goFullScreen() {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        }
+      }
+
+      // Demander le plein écran au chargement
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(goFullScreen, 1000);
       });
-    } else {
-      setInterval(updateBattery, 30000);
-    }
-    
-    setTimeout(() => updateACButton(), 0);
 
-    // ----- PWA -----
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.createElement('button');
-      installBtn.innerText = '📲 Ajouter à l’écran';
-      installBtn.classList.add('install-btn');
-      document.body.appendChild(installBtn);
-
-      installBtn.addEventListener('click', () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-          installBtn.remove();
-        });
+      // Réactiver le plein écran si l'utilisateur sort
+      document.addEventListener('fullscreenchange', function() {
+        if (!document.fullscreenElement) {
+          setTimeout(goFullScreen, 500);
+        }
       });
-    });
 
-    window.addEventListener('appinstalled', () => {
-      const btn = document.querySelector('.install-btn');
-      if (btn) btn.remove();
-    });
-
-    // ----- ACTIVER LE PLEIN ÉCRAN POUR CACHER LA VRAIE BARRE -----
-    function goFullScreen() {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-      } else if (elem.webkitRequestFullscreen) { /* Safari */
-        elem.webkitRequestFullscreen();
-      } else if (elem.msRequestFullscreen) { /* IE/Edge */
-        elem.msRequestFullscreen();
-      }
-    }
-
-    // Demander le plein écran au chargement
-    document.addEventListener('DOMContentLoaded', function() {
-      // Petit délai pour éviter les problèmes de focus
-      setTimeout(goFullScreen, 1000);
-    });
-
-    // Réactiver le plein écran si l'utilisateur sort (optionnel)
-    document.addEventListener('fullscreenchange', function() {
-      if (!document.fullscreenElement) {
-        // Si on sort du plein écran, on le redemande
-        setTimeout(goFullScreen, 500);
-      }
-    });
-
-  })();
-</script>
-
+    })();
+  </script>
 </body>
 </html>
