@@ -87,24 +87,20 @@
     .fullscreen-image img {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* L'image couvre tout l'écran sans déformation */
+      object-fit: cover;
     }
 
     /* TEXTE PAR-DESSUS L'IMAGE */
     .image-text {
       position: absolute;
-      color: #808080; /* Gris */
+      color: #808080;
       font-size: 12px;
       font-weight: bold;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
       z-index: 6;
-      /* NOUVELLE POSITION :
-         - Abaissé de 100px (était 329px → 429px)
-         - Décalé à droite de 80px (était 265px → 345px)
-      */
       top: 348px;
       left: 287px;
-      transform: translate(-50%, -50%); /* Centre le texte sur le point */
+      transform: translate(-50%, -50%);
       white-space: nowrap;
     }
 
@@ -216,9 +212,8 @@
         padding-left: 2.2rem;
       }
       .image-text {
-        /* Mêmes coordonnées pour grands écrans */
-        top: 429px;
-        left: 345px;
+        top: 348px;
+        left: 287px;
       }
     }
 
@@ -231,9 +226,8 @@
       }
       .image-text {
         font-size: 10px;
-        /* Ajustement pour petits écrans */
-        top: 380px;
-        left: 300px;
+        top: 300px;
+        left: 240px;
       }
     }
 
@@ -325,7 +319,7 @@
     // ----- CONSTANTES -----
     const MAX_DIGITS = 8;
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
-    const LONG_PRESS_DURATION = 1000; // 1 seconde
+    const LONG_PRESS_DURATION = 1000;
 
     // ----- VARIABLE P -----
     let P = null;
@@ -336,7 +330,7 @@
     // ----- CYCLE DU % -----
     let percentCycle = 0;
     
-    // ----- MODE SPÉCIAL (true = mode secret actif, false = mode normal) -----
+    // ----- MODE SPÉCIAL -----
     let secretMode = true;
     
     // ----- ÉTAT -----
@@ -381,36 +375,25 @@
 
     // ----- GESTIONNAIRE POUR LE BOUTON "." (3 appuis) -----
     window.handleDotClick = function() {
-      // Incrémenter le compteur
       dotClickCount++;
       
-      // Si on a déjà un timer, on l'annule
       if (dotClickTimer) {
         clearTimeout(dotClickTimer);
       }
       
-      // Démarrer un nouveau timer
       dotClickTimer = setTimeout(() => {
-        // Réinitialiser après 1 seconde sans appui
         dotClickCount = 0;
         dotClickTimer = null;
       }, 1000);
       
-      // Si on a cliqué 3 fois
       if (dotClickCount === 3) {
-        // Afficher l'image
         showImage();
-        
-        // Réinitialiser le compteur
         dotClickCount = 0;
         clearTimeout(dotClickTimer);
         dotClickTimer = null;
       }
       
-      // AUSSI, exécuter la fonction normale d'ajout de point
-      // Mais seulement si on n'est pas en train de faire le triple clic
       if (dotClickCount < 3) {
-        // Appeler la fonction normale d'ajout de point
         performAppendDot();
       }
     };
@@ -492,20 +475,41 @@
     function validateAndStoreFourDigitNumber() {
       const currentText = display.innerText;
       
-      if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
-      if (!isTyping) return;
-      if (currentNumberProcessed) return;
+      console.log("Tentative de validation:", currentText, "isTyping:", isTyping, "currentNumberProcessed:", currentNumberProcessed);
+      
+      // Ne pas stocker si on est en train d'afficher un résultat du cycle %
+      if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') {
+        console.log("⛔ Ignoré: résultat du cycle %");
+        return;
+      }
+      
+      // Ne pas stocker les résultats de calcul
+      if (!isTyping) {
+        console.log("⛔ Ignoré: pas en train de taper");
+        return;
+      }
+      
+      // Ne pas stocker si on a déjà traité ce nombre
+      if (currentNumberProcessed) {
+        console.log("⛔ Ignoré: déjà traité");
+        return;
+      }
       
       if (hasExactlyFourDigits(currentText)) {
         const fourDigits = extractFourDigits(currentText);
+        console.log("✅ Nombre à 4 chiffres détecté:", fourDigits);
         
         if (P === null) {
           P = fourDigits;
-          console.log("P validé et stocké :", P);
+          console.log("🎉 P validé et stocké :", P);
           fetchApiData(P);
           currentNumberProcessed = true;
-          updateImageText(); // Met à jour le texte de l'image
+          updateImageText();
+        } else {
+          console.log("ℹ️ P déjà existant:", P);
         }
+      } else {
+        console.log("⛔ Pas 4 chiffres exactement");
       }
     }
 
@@ -518,7 +522,7 @@
         if (data[code]) {
           apiData = data[code];
           console.log("Données API pour", code, ":", apiData);
-          updateImageText(); // Met à jour le texte de l'image
+          updateImageText();
         } else {
           console.log("Code non trouvé:", code);
           apiData = null;
@@ -619,7 +623,6 @@
         isTyping = false;
         currentNumberProcessed = false;
         resetPercentCycle();
-        // Cacher l'image si elle est visible
         hideImage();
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
@@ -693,8 +696,12 @@
       updateACButton();
     };
 
-    // ----- OPÉRATEURS -----
+    // ----- OPÉRATEURS (CORRIGÉ) -----
     window.setOperator = function(op) {
+      console.log("Opérateur cliqué:", op);
+      console.log("État avant - isTyping:", isTyping, "currentNumberProcessed:", currentNumberProcessed);
+      
+      // VALIDER ET STOCKER le nombre à 4 chiffres tapé avant l'opération
       validateAndStoreFourDigitNumber();
 
       if (operator && waitingForSecondNumber) {
