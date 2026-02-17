@@ -36,58 +36,56 @@
       margin: 0 auto;
     }
 
-    /* ÉCRAN - VERSION iOS : PLUS GRAND ET REMONTÉ */
+    /* ÉCRAN - ENCORE PLUS GRAND */
     .display-container {
       width: 100%;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      margin-bottom: 20px;        /* espace avant les boutons */
+      margin-bottom: 15px;
       flex: 1 1 auto;
-      min-height: 200px;           /* hauteur minimale pour l'affichage */
+      min-height: 280px;           /* hauteur augmentée */
     }
     
     .display {
       width: 100%;
       color: white;
       text-align: right;
-      font-size: clamp(4rem, 20vw, 7rem);  /* encore plus grand */
+      font-size: clamp(5rem, 22vw, 8rem);  /* encore plus grand */
       font-weight: 300;
-      padding: 0.8rem 1.2rem 0.3rem 1.2rem;
+      padding: 1.2rem 1.5rem 0.5rem 1.5rem;
       white-space: nowrap;
       overflow-x: auto;
       overflow-y: hidden;
       direction: ltr;
       scrollbar-width: thin;
       scrollbar-color: #ff9f0a #222;
-      line-height: 1.2;
-      letter-spacing: 2px;
-      font-variant-numeric: tabular-nums;  /* chiffres alignés */
+      line-height: 1.3;
+      letter-spacing: 3px;
+      font-variant-numeric: tabular-nums;
     }
 
     .display::-webkit-scrollbar {
-      height: 4px;
+      height: 6px;                /* barre plus épaisse */
     }
     .display::-webkit-scrollbar-thumb {
       background: #ff9f0a;
-      border-radius: 4px;
+      border-radius: 6px;
     }
-
-    /* Petit indicateur pour montrer qu'on peut scroller (optionnel) */
     .display::-webkit-scrollbar-track {
       background: #222;
-      border-radius: 4px;
+      border-radius: 6px;
     }
 
-    /* GRILLE BOUTONS - légèrement remontée pour équilibrer */
+    /* GRILLE BOUTONS */
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 0.7rem;
       width: 100%;
-      padding: 0.5rem 0.8rem 1.8rem 0.8rem;
+      padding: 0.5rem 0.8rem 2rem 0.8rem;
       background: black;
-      margin-top: auto;            /* pousse vers le bas si besoin */
+      margin-top: auto;
     }
 
     button {
@@ -145,7 +143,7 @@
     @media (min-width: 460px) {
       .buttons {
         gap: 0.9rem;
-        padding: 0.8rem 1rem 2.2rem 1rem;
+        padding: 0.8rem 1rem 2.5rem 1rem;
       }
       button {
         font-size: 2.4rem;
@@ -154,17 +152,20 @@
         padding-left: 2.2rem;
       }
       .display-container {
-        min-height: 240px;        /* plus de hauteur sur grand écran */
+        min-height: 320px;        /* encore plus de hauteur */
       }
     }
 
-    /* petit écran : réduire un peu la police */
+    /* petit écran : réduire un peu */
     @media (max-width: 340px) {
       button {
         font-size: 1.6rem;
       }
       .display {
-        font-size: clamp(3.2rem, 16vw, 5rem);
+        font-size: clamp(4rem, 18vw, 6rem);
+      }
+      .display-container {
+        min-height: 220px;
       }
     }
 
@@ -195,15 +196,15 @@
 <body>
 
 <div class="calculator">
-  <!-- AFFICHEUR PRINCIPAL - VERSION IOS : PLUS GRAND ET REMONTÉ -->
+  <!-- AFFICHEUR PRINCIPAL - TRÈS GRAND -->
   <div class="display-container">
     <div id="display" class="display">0</div>
   </div>
 
   <!-- GRILLE DES TOUCHES -->
   <div class="buttons">
-    <!-- ligne 1 : AC, +/-, %, ÷ -->
-    <button class="light-gray" onclick="clearAll()"><span>AC</span></button>
+    <!-- ligne 1 : AC/C, +/-, %, ÷ -->
+    <button class="light-gray" id="acButton" onclick="acOrC()"><span>AC</span></button>
     <button class="light-gray" onclick="toggleSign()"><span>+/-</span></button>
     <button class="light-gray" onclick="percentage()"><span>%</span></button>
     <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
@@ -237,61 +238,88 @@
   (function() {
     // ----- ÉLÉMENTS DOM -----
     const display = document.getElementById('display');
+    const acButton = document.getElementById('acButton');
     
-    // ----- CONSTANTE POUR LA LIMITE DE CHIFFRES -----
-    const MAX_DIGITS = 10;
+    // ----- CONSTANTE POUR LA LIMITE DE CHIFFRES (7 maintenant) -----
+    const MAX_DIGITS = 7;
 
     // ----- ÉTAT DE LA CALCULATRICE -----
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
-    
-    // ----- VARIABLE POUR STOCKER LE RÉSULTAT PRÉCÉDENT (comportement iOS) -----
     let previousResult = null;
+
+    // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
+    function updateACButton() {
+      if (!acButton) return;
+      
+      const currentText = display.innerText;
+      
+      // Si l'affichage est "0" ou "Erreur" ou qu'on est en attente du deuxième nombre
+      // ou qu'aucun chiffre n'a été saisi, on affiche "AC"
+      if (currentText === '0' || 
+          currentText === 'Erreur' || 
+          (waitingForSecondNumber && currentText === '0') ||
+          (!firstNumber && !operator && !waitingForSecondNumber)) {
+        acButton.innerHTML = '<span>AC</span>';
+      } else {
+        // Sinon, on affiche "C" (efface le dernier caractère)
+        acButton.innerHTML = '<span>C</span>';
+      }
+    }
+
+    // ----- FONCTION POUR LE BOUTON AC/C (comportement iOS) -----
+    window.acOrC = function() {
+      const currentText = display.innerText;
+      const buttonText = acButton.innerText;
+      
+      if (buttonText === 'AC') {
+        // AC : efface tout
+        clearAll();
+      } else {
+        // C : efface le dernier caractère (ou remet à 0 si un seul caractère)
+        if (currentText.length === 1 || (currentText.length === 2 && currentText.startsWith('-'))) {
+          // Si c'est juste "0", "1", "-1", etc. on remet à 0
+          display.innerText = '0';
+        } else {
+          // Sinon on supprime le dernier caractère
+          display.innerText = currentText.slice(0, -1);
+        }
+        // Après avoir effacé, on met à jour le bouton
+        updateACButton();
+      }
+    };
 
     // ----- FONCTION POUR COMPTER LES CHIFFRES (ignorer le point) -----
     function countDigits(str) {
-      // Enlève le signe moins et le point décimal pour compter uniquement les chiffres
       const withoutSign = str.replace('-', '');
       const digitsOnly = withoutSign.replace('.', '');
       return digitsOnly.length;
     }
 
-    // ----- FONCTION POUR FORMATEUR L'AFFICHAGE AVEC LIMITE DE 10 CHIFFRES -----
+    // ----- FONCTION POUR FORMATEUR L'AFFICHAGE AVEC LIMITE DE 7 CHIFFRES -----
     function formatDisplay(value) {
-      // Si c'est un nombre, on le convertit en string
       let str = String(value);
       
-      // Gérer le cas spécial "Erreur"
       if (str === 'Erreur') return 'Erreur';
       
-      // Compter les chiffres actuels
       const digitCount = countDigits(str);
       
-      // Si on a moins de MAX_DIGITS, on garde tel quel
       if (digitCount <= MAX_DIGITS) return str;
       
-      // Si on a trop de chiffres, on doit tronquer
-      // On veut garder maximum MAX_DIGITS chiffres significatifs
-      
-      // Vérifier si c'est un nombre décimal
       if (str.includes('.')) {
-        // Pour un décimal, on garde la partie entière et on limite les décimales
         const parts = str.split('.');
         const integerPart = parts[0].replace('-', '');
         const sign = str.startsWith('-') ? '-' : '';
         
-        // Si la partie entière a déjà MAX_DIGITS ou plus, on ignore les décimales
         if (integerPart.length >= MAX_DIGITS) {
           return sign + integerPart.substring(0, MAX_DIGITS);
         } else {
-          // On peut garder quelques décimales
           const maxDecimals = MAX_DIGITS - integerPart.length;
           const decimalPart = parts[1].substring(0, maxDecimals);
           return sign + integerPart + '.' + decimalPart;
         }
       } else {
-        // Pour un entier, on garde les premiers MAX_DIGITS chiffres
         const sign = str.startsWith('-') ? '-' : '';
         const absStr = str.replace('-', '');
         return sign + absStr.substring(0, MAX_DIGITS);
@@ -302,7 +330,6 @@
     window.appendNumber = function(number) {
       let currentText = display.innerText;
       
-      // Gestion spéciale pour "Erreur"
       if (currentText === 'Erreur') {
         clearAll();
         currentText = '0';
@@ -319,7 +346,6 @@
         let newText = currentText;
         
         if (number === '.') {
-          // Éviter les multiples points
           if (currentText.includes('.')) return;
           newText = currentText + '.';
         } else {
@@ -330,27 +356,26 @@
           }
         }
         
-        // Vérifier la limite de chiffres avant d'afficher
         if (countDigits(newText) <= MAX_DIGITS) {
           display.innerText = newText;
         }
-        // Si dépasse MAX_DIGITS, on ignore l'entrée
       }
+      
+      // Mettre à jour le bouton AC/C après chaque saisie
+      updateACButton();
     };
 
-    // ----- OPÉRATEURS (comportement iOS : affiche 0 et prépare la saisie) -----
+    // ----- OPÉRATEURS (comportement iOS) -----
     window.setOperator = function(op) {
       const currentValue = parseFloat(display.innerText);
 
-      // Si on a déjà un opérateur en attente, on le remplace simplement
       if (operator && waitingForSecondNumber) {
         operator = op;
+        updateACButton();
         return;
       }
 
-      // Si on a un premier nombre et un opérateur (calcul en cours)
       if (firstNumber !== null && operator && !waitingForSecondNumber) {
-        // Effectuer le calcul précédent
         let secondNumber = currentValue;
         let result = operate(operator, firstNumber, secondNumber);
         if (result === 'Erreur') {
@@ -358,23 +383,24 @@
           firstNumber = null;
           operator = null;
           waitingForSecondNumber = false;
+          updateACButton();
           return;
         } else {
-          // Stocker le résultat et l'afficher
           const formattedResult = formatDisplay(result);
           display.innerText = formattedResult;
           firstNumber = parseFloat(formattedResult);
           previousResult = firstNumber;
         }
       } else {
-        // Premier opérateur après un nombre
         firstNumber = currentValue;
       }
 
-      // Comportement iOS : on met l'affichage à 0 pour saisir le deuxième nombre
       operator = op;
       waitingForSecondNumber = true;
-      display.innerText = '0';  // ← C'EST LA CLÉ : l'affichage devient 0
+      display.innerText = '0';
+      
+      // Mettre à jour le bouton AC/C
+      updateACButton();
     };
 
     // ----- CALCUL EFFECTIF -----
@@ -391,6 +417,7 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
+        updateACButton();
         return;
       }
 
@@ -398,10 +425,11 @@
       firstNumber = parseFloat(display.innerText);
       previousResult = firstNumber;
       operator = null;
-      waitingForSecondNumber = true;  // Prochain chiffre effacera l'écran
+      waitingForSecondNumber = true;
+      
+      updateACButton();
     };
 
-    // fonction utilitaire pour les quatre opérations
     function operate(op, a, b) {
       switch(op) {
         case '+': return a + b;
@@ -414,35 +442,38 @@
       }
     }
 
-    // ----- FONCTIONS SPÉCIALES AVEC FORMATAGE -----
+    // ----- FONCTIONS SPÉCIALES -----
     window.clearAll = function() {
       display.innerText = '0';
       firstNumber = null;
       operator = null;
       waitingForSecondNumber = false;
       previousResult = null;
+      updateACButton();
     };
 
     window.toggleSign = function() {
+      if (display.innerText === 'Erreur') return;
       let val = parseFloat(display.innerText);
-      if (isNaN(val) || display.innerText === 'Erreur') return;
+      if (isNaN(val)) return;
       val = val * -1;
       display.innerText = formatDisplay(val);
-      
-      // Si on est en attente du deuxième nombre, on met à jour firstNumber? Non, on garde
-      // car c'est le nombre affiché qui compte
+      updateACButton();
     };
 
     window.percentage = function() {
+      if (display.innerText === 'Erreur') return;
       let val = parseFloat(display.innerText);
-      if (isNaN(val) || display.innerText === 'Erreur') return;
+      if (isNaN(val)) return;
       val = val / 100;
       display.innerText = formatDisplay(val);
-      
-      // Même logique : on transforme le nombre affiché
+      updateACButton();
     };
 
-    // ----- INSTALLATION PWA (beforeinstallprompt) -----
+    // Initialisation du bouton AC
+    setTimeout(() => updateACButton(), 0);
+
+    // ----- INSTALLATION PWA -----
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -466,7 +497,6 @@
     });
 
     window.addEventListener('appinstalled', () => {
-      console.log('PWA installée, on masque le bouton');
       const btn = document.querySelector('.install-btn');
       if (btn) btn.remove();
     });
