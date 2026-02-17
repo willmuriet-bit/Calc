@@ -24,7 +24,7 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* boutons en bas */
+    justify-content: flex-end; /* descendre en bas */
     align-items: center;
     width: 100%;
     max-width: 400px;
@@ -41,17 +41,16 @@ html, body {
     overflow-x: auto;
 }
 
-/* grille pour toutes les lignes sauf dernière */
+/* Tous les boutons en même taille, grille uniforme */
 .buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     width: 100%;
-    padding: 0 10px;
+    padding: 0 10px 20px 10px;
     box-sizing: border-box;
 }
 
-/* Boutons généraux */
 button {
     width: 100%;
     padding-top: 100%; /* carré parfait */
@@ -78,19 +77,6 @@ button span {
 
 button:active { filter: brightness(1.3); }
 
-/* Bouton 0 */
-.zero { border-radius: 50px; }
-
-/* Ligne du bas spéciale : 0 | . | = */
-.last-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr; /* 0 = moitié gauche, . et = = moitié droite */
-    gap: 10px;
-    width: 100%;
-    padding: 0 10px 20px 10px;
-    box-sizing: border-box;
-}
-
 @media screen and (min-width: 400px) {
     .display { font-size: 80px; }
     button { font-size: 28px; }
@@ -102,34 +88,36 @@ button:active { filter: brightness(1.3); }
 <div class="calculator">
     <div id="display" class="display">0</div>
 
-    <!-- Les 4 premières lignes -->
     <div class="buttons">
+        <!-- Ligne 1 -->
         <button class="light-gray" onclick="clearAll()"><span>AC</span></button>
         <button class="light-gray" onclick="toggleSign()"><span>+/-</span></button>
         <button class="light-gray" onclick="percentage()"><span>%</span></button>
         <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
 
+        <!-- Ligne 2 -->
         <button class="dark-gray" onclick="appendNumber('7')"><span>7</span></button>
         <button class="dark-gray" onclick="appendNumber('8')"><span>8</span></button>
         <button class="dark-gray" onclick="appendNumber('9')"><span>9</span></button>
         <button class="orange" onclick="setOperator('*')"><span>×</span></button>
 
+        <!-- Ligne 3 -->
         <button class="dark-gray" onclick="appendNumber('4')"><span>4</span></button>
         <button class="dark-gray" onclick="appendNumber('5')"><span>5</span></button>
         <button class="dark-gray" onclick="appendNumber('6')"><span>6</span></button>
         <button class="orange" onclick="setOperator('-')"><span>−</span></button>
 
+        <!-- Ligne 4 -->
         <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
         <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
         <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
         <button class="orange" onclick="setOperator('+')"><span>+</span></button>
-    </div>
 
-    <!-- Dernière ligne : 0 | . | = -->
-    <div class="last-row">
-        <button class="dark-gray zero" onclick="appendNumber('0')"><span>0</span></button>
+        <!-- Ligne 5 (0, ., =) -->
+        <button class="dark-gray" onclick="appendNumber('0')"><span>0</span></button>
         <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
         <button class="orange" onclick="calculate()"><span>=</span></button>
+        <div></div> <!-- cellule vide pour garder la grille 4 colonnes -->
     </div>
 </div>
 
@@ -201,6 +189,5 @@ window.addEventListener('beforeinstallprompt', (e)=>{
     });
 });
 </script>
-
 </body>
 </html>
