@@ -36,14 +36,24 @@
       margin: 0 auto;
     }
 
-    /* ÉCRAN */
+    /* ÉCRAN - VERSION iOS : PLUS GRAND ET REMONTÉ */
+    .display-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      margin-bottom: 20px;        /* espace avant les boutons */
+      flex: 1 1 auto;
+      min-height: 200px;           /* hauteur minimale pour l'affichage */
+    }
+    
     .display {
       width: 100%;
       color: white;
       text-align: right;
-      font-size: clamp(3rem, 15vw, 5.5rem);
+      font-size: clamp(4rem, 20vw, 7rem);  /* encore plus grand */
       font-weight: 300;
-      padding: 0.3rem 1.2rem 0.2rem 1.2rem;
+      padding: 0.8rem 1.2rem 0.3rem 1.2rem;
       white-space: nowrap;
       overflow-x: auto;
       overflow-y: hidden;
@@ -51,7 +61,8 @@
       scrollbar-width: thin;
       scrollbar-color: #ff9f0a #222;
       line-height: 1.2;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;  /* chiffres alignés */
     }
 
     .display::-webkit-scrollbar {
@@ -62,14 +73,21 @@
       border-radius: 4px;
     }
 
-    /* GRILLE BOUTONS */
+    /* Petit indicateur pour montrer qu'on peut scroller (optionnel) */
+    .display::-webkit-scrollbar-track {
+      background: #222;
+      border-radius: 4px;
+    }
+
+    /* GRILLE BOUTONS - légèrement remontée pour équilibrer */
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 0.7rem;
       width: 100%;
-      padding: 0.5rem 0.8rem 1.5rem 0.8rem;
+      padding: 0.5rem 0.8rem 1.8rem 0.8rem;
       background: black;
+      margin-top: auto;            /* pousse vers le bas si besoin */
     }
 
     button {
@@ -127,7 +145,7 @@
     @media (min-width: 460px) {
       .buttons {
         gap: 0.9rem;
-        padding: 0.8rem 1rem 2rem 1rem;
+        padding: 0.8rem 1rem 2.2rem 1rem;
       }
       button {
         font-size: 2.4rem;
@@ -135,12 +153,18 @@
       .btn-zero {
         padding-left: 2.2rem;
       }
+      .display-container {
+        min-height: 240px;        /* plus de hauteur sur grand écran */
+      }
     }
 
     /* petit écran : réduire un peu la police */
     @media (max-width: 340px) {
       button {
         font-size: 1.6rem;
+      }
+      .display {
+        font-size: clamp(3.2rem, 16vw, 5rem);
       }
     }
 
@@ -171,8 +195,10 @@
 <body>
 
 <div class="calculator">
-  <!-- AFFICHEUR PRINCIPAL -->
-  <div id="display" class="display">0</div>
+  <!-- AFFICHEUR PRINCIPAL - VERSION IOS : PLUS GRAND ET REMONTÉ -->
+  <div class="display-container">
+    <div id="display" class="display">0</div>
+  </div>
 
   <!-- GRILLE DES TOUCHES -->
   <div class="buttons">
@@ -219,6 +245,9 @@
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
+    
+    // ----- VARIABLE POUR STOCKER LE RÉSULTAT PRÉCÉDENT (comportement iOS) -----
+    let previousResult = null;
 
     // ----- FONCTION POUR COMPTER LES CHIFFRES (ignorer le point) -----
     function countDigits(str) {
@@ -309,30 +338,43 @@
       }
     };
 
-    // ----- OPÉRATEURS -----
+    // ----- OPÉRATEURS (comportement iOS : affiche 0 et prépare la saisie) -----
     window.setOperator = function(op) {
       const currentValue = parseFloat(display.innerText);
 
+      // Si on a déjà un opérateur en attente, on le remplace simplement
       if (operator && waitingForSecondNumber) {
         operator = op;
         return;
       }
 
+      // Si on a un premier nombre et un opérateur (calcul en cours)
       if (firstNumber !== null && operator && !waitingForSecondNumber) {
+        // Effectuer le calcul précédent
         let secondNumber = currentValue;
         let result = operate(operator, firstNumber, secondNumber);
         if (result === 'Erreur') {
           display.innerText = 'Erreur';
+          firstNumber = null;
+          operator = null;
+          waitingForSecondNumber = false;
+          return;
         } else {
-          display.innerText = formatDisplay(result);
-          firstNumber = parseFloat(display.innerText);
+          // Stocker le résultat et l'afficher
+          const formattedResult = formatDisplay(result);
+          display.innerText = formattedResult;
+          firstNumber = parseFloat(formattedResult);
+          previousResult = firstNumber;
         }
       } else {
+        // Premier opérateur après un nombre
         firstNumber = currentValue;
       }
 
+      // Comportement iOS : on met l'affichage à 0 pour saisir le deuxième nombre
       operator = op;
       waitingForSecondNumber = true;
+      display.innerText = '0';  // ← C'EST LA CLÉ : l'affichage devient 0
     };
 
     // ----- CALCUL EFFECTIF -----
@@ -354,8 +396,9 @@
 
       display.innerText = formatDisplay(result);
       firstNumber = parseFloat(display.innerText);
+      previousResult = firstNumber;
       operator = null;
-      waitingForSecondNumber = true;
+      waitingForSecondNumber = true;  // Prochain chiffre effacera l'écran
     };
 
     // fonction utilitaire pour les quatre opérations
@@ -377,6 +420,7 @@
       firstNumber = null;
       operator = null;
       waitingForSecondNumber = false;
+      previousResult = null;
     };
 
     window.toggleSign = function() {
@@ -384,6 +428,9 @@
       if (isNaN(val) || display.innerText === 'Erreur') return;
       val = val * -1;
       display.innerText = formatDisplay(val);
+      
+      // Si on est en attente du deuxième nombre, on met à jour firstNumber? Non, on garde
+      // car c'est le nombre affiché qui compte
     };
 
     window.percentage = function() {
@@ -391,6 +438,8 @@
       if (isNaN(val) || display.innerText === 'Erreur') return;
       val = val / 100;
       display.innerText = formatDisplay(val);
+      
+      // Même logique : on transforme le nombre affiché
     };
 
     // ----- INSTALLATION PWA (beforeinstallprompt) -----
