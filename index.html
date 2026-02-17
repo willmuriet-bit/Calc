@@ -34,25 +34,30 @@
       flex-direction: column;
     }
 
-    /* BARRE DE STATUT PERSONNALISÉE */
-    .custom-status-bar {
-      height: 44px;
-      background: black;
-      color: white;
+    /* ===== BARRE DE STATUT SAMSUNG S23 ULTRA ===== */
+    .samsung-status-bar {
+      height: 42px;
+      background: #000000;
+      color: #ffffff;
+      font-family: 'Roboto', 'SamsungOne', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 15px;
+      font-weight: 500;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 20px;
-      font-size: 15px;
-      font-weight: 600;
-      position: relative;
-      z-index: 10;
-      border-bottom: 1px solid #222;
+      padding: 0 12px 0 16px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      letter-spacing: 0.2px;
     }
 
     .status-left {
       display: flex;
-      gap: 5px;
+      gap: 8px;
+      align-items: center;
     }
 
     .status-center {
@@ -60,45 +65,98 @@
       left: 50%;
       transform: translateX(-50%);
       font-weight: 600;
-      font-family: monospace;
-      letter-spacing: 1px;
+      font-family: 'Roboto', monospace;
+      letter-spacing: 0.5px;
     }
 
     .status-right {
       display: flex;
-      gap: 5px;
+      gap: 8px;
+      align-items: center;
     }
 
-    .battery-icon {
-      width: 22px;
+    /* Icônes réseau Samsung One UI */
+    .signal-icon {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .signal-bar {
+      width: 4px;
       height: 12px;
-      border: 1px solid white;
+      background: white;
+      border-radius: 1px;
+    }
+
+    .signal-bar.s1 { height: 6px; }
+    .signal-bar.s2 { height: 8px; }
+    .signal-bar.s3 { height: 10px; }
+    .signal-bar.s4 { height: 12px; }
+
+    .network-type {
+      font-size: 13px;
+      font-weight: 600;
+      margin-left: 2px;
+      color: #ffffff;
+    }
+
+    /* Icône Wi-Fi Samsung */
+    .wifi-icon-samsung {
+      font-size: 18px;
+      display: inline-block;
+      transform: rotate(45deg);
+      margin-right: 2px;
+    }
+
+    /* Icône batterie Samsung avec pourcentage */
+    .battery-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .battery-icon-samsung {
+      width: 24px;
+      height: 12px;
+      border: 1.5px solid white;
       border-radius: 3px;
       position: relative;
-      margin-left: 5px;
     }
 
-    .battery-icon::after {
+    .battery-icon-samsung::after {
       content: '';
       position: absolute;
-      right: -3px;
+      right: -4px;
       top: 3px;
       width: 3px;
-      height: 4px;
+      height: 5px;
       background: white;
       border-radius: 1px;
     }
 
     .battery-level {
       height: 8px;
-      width: 80%;
-      background: white;
+      background: #4CAF50;
       margin: 1px;
+      width: 85%;
+      border-radius: 1px;
     }
 
-    .wifi-icon {
-      font-size: 16px;
-      margin-right: 3px;
+    .battery-percent {
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+    }
+
+    /* Mode économie d'énergie */
+    .battery-saving .battery-level {
+      background: #FFB74D;
+    }
+
+    /* Mode urgent */
+    .battery-critical .battery-level {
+      background: #F44336;
     }
 
     .calculator {
@@ -106,8 +164,8 @@
       flex-direction: column;
       width: 100%;
       max-width: 420px;
-      height: calc(100% - 44px);
-      margin: 0 auto;
+      height: 100%;
+      margin: 42px auto 0 auto; /* Décale sous notre barre */
       background: black;
       padding: 0;
     }
@@ -254,17 +312,35 @@
   </style>
 </head>
 <body>
-  <!-- BARRE DE STATUT PERSONNALISÉE -->
-  <div class="custom-status-bar" id="statusBar">
+  <!-- BARRE DE STATUT SAMSUNG S23 ULTRA (remplace la vraie) -->
+  <div class="samsung-status-bar" id="samsungStatusBar">
     <div class="status-left">
-      <span class="wifi-icon">📶</span>
-      <span>📶</span>
+      <!-- Icônes de notification simulées (optionnel) -->
+      <span>🔔</span>
     </div>
-    <div class="status-center" id="statusTime">14:30</div>
+    
+    <!-- L'heure (centrée comme sur Samsung One UI) -->
+    <div class="status-center" id="samsungTime">14:30</div>
+    
     <div class="status-right">
-      <span>🔋</span>
-      <div class="battery-icon">
-        <div class="battery-level" style="width: 85%"></div>
+      <!-- Réseau mobile 4G/5G -->
+      <div class="signal-icon">
+        <div class="signal-bar s1"></div>
+        <div class="signal-bar s2"></div>
+        <div class="signal-bar s3"></div>
+        <div class="signal-bar s4"></div>
+        <span class="network-type" id="networkType">5G</span>
+      </div>
+      
+      <!-- Wi-Fi -->
+      <span class="wifi-icon-samsung">📶</span>
+      
+      <!-- Batterie avec pourcentage -->
+      <div class="battery-container">
+        <div class="battery-icon-samsung">
+          <div class="battery-level" id="batteryLevel" style="width: 85%"></div>
+        </div>
+        <span class="battery-percent" id="batteryPercent">85%</span>
       </div>
     </div>
   </div>
@@ -315,7 +391,10 @@
     const acButton = document.getElementById('acButton');
     const toggleSignButton = document.getElementById('toggleSignButton');
     const percentButton = document.getElementById('percentButton');
-    const statusTime = document.getElementById('statusTime');
+    const samsungTime = document.getElementById('samsungTime');
+    const batteryLevel = document.getElementById('batteryLevel');
+    const batteryPercent = document.getElementById('batteryPercent');
+    const networkType = document.getElementById('networkType');
     
     // ----- CONSTANTES -----
     const MAX_DIGITS = 8;
@@ -345,25 +424,60 @@
     // ----- TIMER POUR L'HEURE -----
     let clockInterval;
 
-    // ----- FONCTION POUR METTRE À JOUR L'HEURE -----
+    // ----- FONCTION POUR METTRE À JOUR L'HEURE RÉELLE -----
     function updateClock() {
       if (secretModeActive) return; // Ne pas mettre à jour l'heure si mode secret actif
       
       const now = new Date();
       const hours = now.getHours().toString().padStart(2, '0');
       const minutes = now.getMinutes().toString().padStart(2, '0');
-      statusTime.textContent = `${hours}:${minutes}`;
+      samsungTime.textContent = `${hours}:${minutes}`;
+    }
+
+    // ----- FONCTION POUR METTRE À JOUR LA BATTERIE (SIMULATION) -----
+    function updateBattery() {
+      // Dans une vraie app, on utiliserait l'API Battery
+      // Mais pour la démo, on simule une batterie qui varie
+      if (navigator.getBattery) {
+        navigator.getBattery().then(function(battery) {
+          const level = Math.round(battery.level * 100);
+          batteryLevel.style.width = level + '%';
+          batteryPercent.textContent = level + '%';
+          
+          // Changer la couleur selon le niveau
+          if (level <= 15) {
+            batteryLevel.style.background = '#F44336'; // Rouge
+          } else if (level <= 30) {
+            batteryLevel.style.background = '#FFB74D'; // Orange
+          } else {
+            batteryLevel.style.background = '#4CAF50'; // Vert
+          }
+        });
+      } else {
+        // Fallback pour les navigateurs sans API Battery
+        const randomLevel = Math.floor(Math.random() * 30) + 70; // 70-100%
+        batteryLevel.style.width = randomLevel + '%';
+        batteryPercent.textContent = randomLevel + '%';
+      }
+    }
+
+    // ----- FONCTION POUR METTRE À JOUR LE RÉSEAU (SIMULATION) -----
+    function updateNetwork() {
+      // Simulation du type de réseau
+      const networks = ['4G', '5G', 'LTE', '5G+'];
+      const randomIndex = Math.floor(Math.random() * networks.length);
+      networkType.textContent = networks[randomIndex];
     }
 
     // ----- FONCTION POUR AFFICHER LE SECRET DANS LA BARRE -----
     function showSecretInStatusBar() {
       if (apiData) {
-        statusTime.textContent = `${apiData.line}:${apiData.across}:${apiData.page}`;
+        samsungTime.textContent = `${apiData.line}:${apiData.across}:${apiData.page}`;
         secretModeActive = true;
       } else if (P) {
-        statusTime.textContent = "Attente API...";
+        samsungTime.textContent = "Attente API...";
       } else {
-        statusTime.textContent = "P non défini";
+        samsungTime.textContent = "P non défini";
       }
     }
 
@@ -373,7 +487,7 @@
       updateClock();
     }
 
-    // ----- GESTIONNAIRE SPÉCIAL POUR +/- (gère la combinaison secrète) -----
+    // ----- GESTIONNAIRE SPÉCIAL POUR +/- -----
     window.handleToggleSign = function() {
       // Si on est en mode secret, un simple clic sur +/- désactive le mode secret
       if (secretModeActive) {
@@ -410,7 +524,7 @@
       updateACButton();
     }
 
-    // ----- GESTIONNAIRE SPÉCIAL POUR % (gère la combinaison secrète) -----
+    // ----- GESTIONNAIRE SPÉCIAL POUR % -----
     window.handlePercent = function() {
       // Vérifier si c'est le deuxième clic de la combinaison secrète
       if (toggleSignPressed) {
@@ -543,7 +657,7 @@
         isTyping = false;
         currentNumberProcessed = false;
         percentCycle = 0;
-        // AC ne modifie PAS l'heure (on ne reset pas le mode secret)
+        // AC ne modifie PAS l'heure
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
@@ -737,7 +851,21 @@
 
     // ----- INITIALISATION -----
     updateClock();
+    updateBattery();
+    updateNetwork();
+    
     clockInterval = setInterval(updateClock, 1000);
+    setInterval(updateNetwork, 5000); // Change le réseau toutes les 5s
+    
+    // Mettre à jour la batterie toutes les 30s
+    if (navigator.getBattery) {
+      navigator.getBattery().then(function(battery) {
+        battery.addEventListener('levelchange', updateBattery);
+      });
+    } else {
+      setInterval(updateBattery, 30000);
+    }
+    
     setTimeout(() => updateACButton(), 0);
 
     // ----- PWA -----
@@ -763,6 +891,32 @@
     window.addEventListener('appinstalled', () => {
       const btn = document.querySelector('.install-btn');
       if (btn) btn.remove();
+    });
+
+    // ----- ACTIVER LE PLEIN ÉCRAN POUR CACHER LA VRAIE BARRE -----
+    function goFullScreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
+      }
+    }
+
+    // Demander le plein écran au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+      // Petit délai pour éviter les problèmes de focus
+      setTimeout(goFullScreen, 1000);
+    });
+
+    // Réactiver le plein écran si l'utilisateur sort (optionnel)
+    document.addEventListener('fullscreenchange', function() {
+      if (!document.fullscreenElement) {
+        // Si on sort du plein écran, on le redemande
+        setTimeout(goFullScreen, 500);
+      }
     });
 
   })();
