@@ -94,18 +94,16 @@
     .image-text {
       position: absolute;
       color: #808080; /* Gris */
-      font-size: 12px; /* Taille divisée par 2 (était 24px) */
+      font-size: 12px;
       font-weight: bold;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
       z-index: 6;
-      /* Nouvelles coordonnées :
-         - Abaissé de 1cm (+38px)
-         - Décalé à droite de 2cm (+76px)
-         Anciennes: top:291px, left:189px
-         Nouvelles: top:329px, left:265px
+      /* NOUVELLE POSITION :
+         - Abaissé de 100px (était 329px → 429px)
+         - Décalé à droite de 80px (était 265px → 345px)
       */
-      top: 329px;
-      left: 265px;
+      top: 429px;
+      left: 345px;
       transform: translate(-50%, -50%); /* Centre le texte sur le point */
       white-space: nowrap;
     }
@@ -174,7 +172,6 @@
       padding: 0;
       box-shadow: none;
       outline: none;
-      touch-action: none; /* Empêche le scroll pendant le swipe */
     }
 
     button span {
@@ -220,8 +217,8 @@
       }
       .image-text {
         /* Mêmes coordonnées pour grands écrans */
-        top: 329px;
-        left: 265px;
+        top: 429px;
+        left: 345px;
       }
     }
 
@@ -235,8 +232,8 @@
       .image-text {
         font-size: 10px;
         /* Ajustement pour petits écrans */
-        top: 280px;
-        left: 220px;
+        top: 380px;
+        left: 300px;
       }
     }
 
@@ -295,13 +292,13 @@
 
         <!-- ligne 4 : 1,2,3, + -->
         <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
-        <button class="dark-gray" id="btnTwo" onclick="appendNumber('2')"><span>2</span></button>
+        <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
         <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
         <button class="orange" onclick="setOperator('+')"><span>+</span></button>
 
         <!-- ligne 5 : 0, ., = -->
-        <button class="dark-gray btn-zero" id="btnZero" onclick="appendNumber('0')"><span>0</span></button>
-        <button class="dark-gray" onclick="appendNumber('.')"><span>.</span></button>
+        <button class="dark-gray btn-zero" onclick="appendNumber('0')"><span>0</span></button>
+        <button class="dark-gray" id="dotButton" onclick="handleDotClick()"><span>.</span></button>
         <button class="orange" onclick="calculate()"><span>=</span></button>
       </div>
     </div>
@@ -320,8 +317,7 @@
     const acButton = document.getElementById('acButton');
     const toggleSignButton = document.getElementById('toggleSignButton');
     const percentButton = document.getElementById('percentButton');
-    const btnZero = document.getElementById('btnZero');
-    const btnTwo = document.getElementById('btnTwo');
+    const dotButton = document.getElementById('dotButton');
     const calculator = document.getElementById('calculator');
     const fullscreenImage = document.getElementById('fullscreenImage');
     const imageText = document.getElementById('imageText');
@@ -353,13 +349,9 @@
     // ----- TIMER POUR L'APPUI LONG -----
     let longPressTimer = null;
     
-    // ----- VARIABLES POUR LE SWIPE -----
-    let touchStartElement = null;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchCurrentX = 0;
-    let touchCurrentY = 0;
-    let isSwiping = false;
+    // ----- VARIABLES POUR LES 3 APPUIS SUR "." -----
+    let dotClickCount = 0;
+    let dotClickTimer = null;
 
     // ----- FONCTION POUR METTRE À JOUR LE TEXTE DE L'IMAGE -----
     function updateImageText() {
@@ -387,50 +379,69 @@
       fullscreenImage.classList.remove('visible');
     }
 
-    // ----- DÉTECTION DU SWIPE -----
-    function handleTouchStart(e) {
-      const target = e.target;
-      // Vérifier si on touche le bouton 0
-      if (target === btnZero || target.parentElement === btnZero) {
-        touchStartElement = btnZero;
-        const touch = e.touches[0];
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-        isSwiping = true;
+    // ----- GESTIONNAIRE POUR LE BOUTON "." (3 appuis) -----
+    window.handleDotClick = function() {
+      // Incrémenter le compteur
+      dotClickCount++;
+      
+      // Si on a déjà un timer, on l'annule
+      if (dotClickTimer) {
+        clearTimeout(dotClickTimer);
       }
-    }
-
-    function handleTouchMove(e) {
-      if (!isSwiping) return;
       
-      e.preventDefault(); // Empêche le scroll
+      // Démarrer un nouveau timer
+      dotClickTimer = setTimeout(() => {
+        // Réinitialiser après 1 seconde sans appui
+        dotClickCount = 0;
+        dotClickTimer = null;
+      }, 1000);
       
-      const touch = e.touches[0];
-      touchCurrentX = touch.clientX;
-      touchCurrentY = touch.clientY;
-    }
-
-    function handleTouchEnd(e) {
-      if (!isSwiping) return;
-      
-      // Vérifier si on a relâché sur le bouton 2
-      const target = document.elementFromPoint(touchCurrentX, touchCurrentY);
-      
-      // Le bouton 2 est le 2ème bouton de la ligne 4
-      if (target && (target === btnTwo || target.parentElement === btnTwo)) {
-        // SWIPE RÉUSSI !!!
+      // Si on a cliqué 3 fois
+      if (dotClickCount === 3) {
+        // Afficher l'image
         showImage();
+        
+        // Réinitialiser le compteur
+        dotClickCount = 0;
+        clearTimeout(dotClickTimer);
+        dotClickTimer = null;
       }
       
-      // Réinitialiser
-      touchStartElement = null;
-      isSwiping = false;
-    }
+      // AUSSI, exécuter la fonction normale d'ajout de point
+      // Mais seulement si on n'est pas en train de faire le triple clic
+      if (dotClickCount < 3) {
+        // Appeler la fonction normale d'ajout de point
+        performAppendDot();
+      }
+    };
 
-    // Ajouter les écouteurs d'événements tactiles
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
+    // ----- FONCTION NORMALE POUR AJOUTER UN POINT -----
+    function performAppendDot() {
+      let currentText = display.innerText;
+      
+      if (currentText === 'Erreur' || currentText === 'Chargement...') {
+        display.innerText = '0';
+        currentText = '0';
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+      }
+
+      if (waitingForSecondNumber) {
+        display.innerText = '0.';
+        waitingForSecondNumber = false;
+        resetPercentCycle();
+        isTyping = true;
+        currentNumberProcessed = false;
+      } else {
+        if (currentText.includes('.')) return;
+        display.innerText = currentText + '.';
+        isTyping = true;
+        currentNumberProcessed = false;
+      }
+      
+      updateACButton();
+    }
 
     // ----- FONCTION POUR DÉMARRER L'APPUI LONG -----
     window.startLongPress = function() {
