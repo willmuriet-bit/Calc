@@ -238,13 +238,20 @@
     
     // ----- CONSTANTES -----
     const MAX_DIGITS = 8;
+    const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
 
     // ----- VARIABLE P (stocke le premier nombre à 4 chiffres) -----
     let P = null;
     
-    // ----- COMPTEUR POUR LE BOUTON % (3 appuis) -----
+    // ----- VARIABLE POUR STOCKER LES DONNÉES DE L'API -----
+    let apiData = null;
+    
+    // ----- COMPTEUR POUR LE BOUTON % (gère 1,2,3 appuis) -----
     let percentClickCount = 0;
     let percentTimer = null;
+    
+    // ----- VARIABLE POUR STOCKER LE DERNIER RÉSULTAT API (format avec points) -----
+    let lastApiResult = null;
 
     // ----- ÉTAT -----
     let firstNumber = null;
@@ -253,31 +260,49 @@
 
     // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
     function extractFourDigits(numberStr) {
-      // Enlever le point décimal et garder tous les chiffres
       return numberStr.replace('.', '');
     }
 
     // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES -----
     function hasFourDigits(numberStr) {
-      // Compter uniquement les chiffres (ignorer le point et le signe)
       const digitsOnly = numberStr.replace('-', '').replace('.', '');
       return digitsOnly.length === 4;
     }
 
     // ----- FONCTION POUR STOCKER LE PREMIER NOMBRE À 4 CHIFFRES -----
     function checkAndStoreFourDigitNumber(numberStr) {
-      // Si P est déjà défini, on ne fait rien
       if (P !== null) return;
       
-      // Vérifier si le nombre a exactement 4 chiffres
       if (hasFourDigits(numberStr)) {
-        // Extraire les 4 chiffres sans virgule
         P = extractFourDigits(numberStr);
-        console.log("P stocké :", P); // Pour debug, à retirer plus tard
+        console.log("P stocké :", P);
+        
+        // Dès que P est stocké, on appelle l'API
+        fetchApiData(P);
       }
     }
 
-    // ----- FONCTION POUR LE BOUTON % (3 appuis pour afficher P) -----
+    // ----- FONCTION POUR APPELER L'API -----
+    async function fetchApiData(code) {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        // Le code doit être une chaîne de 4 caractères (ex: "0007")
+        if (data[code]) {
+          apiData = data[code];
+          console.log("Données API pour", code, ":", apiData);
+        } else {
+          console.log("Code non trouvé dans l'API:", code);
+          apiData = null;
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'appel API:", error);
+        apiData = null;
+      }
+    }
+
+    // ----- FONCTION POUR LE BOUTON % (gère 1,2,3 appuis) -----
     window.handlePercent = function() {
       // Incrémenter le compteur
       percentClickCount++;
@@ -292,25 +317,49 @@
         // Réinitialiser après 1 seconde sans appui
         percentClickCount = 0;
         percentTimer = null;
+        lastApiResult = null; // On oublie le dernier résultat
       }, 1000);
+      
+      // Si on a cliqué 2 fois
+      if (percentClickCount === 2) {
+        // Vérifier si on a des données API
+        if (apiData) {
+          // Formater avec des points: ligne.across.page
+          const formattedResult = `${apiData.line}.${apiData.across}.${apiData.page}`;
+          display.innerText = formattedResult;
+          lastApiResult = formattedResult;
+        } else if (P) {
+          display.innerText = "Attente API...";
+        } else {
+          display.innerText = "0";
+        }
+      }
       
       // Si on a cliqué 3 fois
       if (percentClickCount === 3) {
-        // Afficher P s'il existe, sinon afficher "0"
-        if (P !== null) {
-          display.innerText = P;
+        // Vérifier si on a des données API
+        if (apiData) {
+          // Formater sans points: ligneacrosspage
+          const formattedResult = `${apiData.line}${apiData.across}${apiData.page}`;
+          display.innerText = formattedResult;
+        } else if (lastApiResult) {
+          // Si on a le résultat avec points, on enlève les points
+          display.innerText = lastApiResult.replace(/\./g, '');
+        } else if (P) {
+          display.innerText = "Attente API...";
         } else {
           display.innerText = "0";
         }
         
-        // Réinitialiser le compteur
+        // Réinitialiser après 3 clics
         percentClickCount = 0;
         clearTimeout(percentTimer);
         percentTimer = null;
-        
-        // Mettre à jour le bouton AC/C
-        updateACButton();
+        lastApiResult = null;
       }
+      
+      // Mettre à jour le bouton AC/C
+      updateACButton();
     };
 
     // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
@@ -339,7 +388,7 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
-        // Note: on ne réinitialise PAS P ici (il reste stocké)
+        // Note: on ne réinitialise PAS P et apiData ici (ils restent stockés)
       } else {
         if (currentText === 'Erreur') {
           display.innerText = '0';
@@ -498,7 +547,7 @@
       // Vérifier si le résultat a 4 chiffres
       checkAndStoreFourDigitNumber(display.innerText);
       
-      // FORCER LE BOUTON À DEVENIR AC APRÈS UN CALCUL
+      // Forcer le bouton à devenir AC après un calcul
       setTimeout(() => {
         acButton.innerHTML = '<span>AC</span>';
       }, 0);
