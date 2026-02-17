@@ -246,12 +246,8 @@
     // ----- VARIABLE POUR STOCKER LES DONNÉES DE L'API -----
     let apiData = null;
     
-    // ----- COMPTEUR POUR LE BOUTON % (gère 1,2,3 appuis) -----
-    let percentClickCount = 0;
-    let percentTimer = null;
-    
-    // ----- VARIABLE POUR STOCKER LE DERNIER RÉSULTAT API (format avec points) -----
-    let lastApiResult = null;
+    // ----- COMPTEUR POUR LE BOUTON % (cycle: 0=P, 1=avec points, 2=sans points) -----
+    let percentCycle = 0;
 
     // ----- ÉTAT -----
     let firstNumber = null;
@@ -302,65 +298,50 @@
       }
     }
 
-    // ----- FONCTION POUR LE BOUTON % (gère 1,2,3 appuis) -----
+    // ----- FONCTION POUR LE BOUTON % (cycle: P → avec points → sans points) -----
     window.handlePercent = function() {
-      // Incrémenter le compteur
-      percentClickCount++;
-      
-      // Si on a déjà un timer, on l'annule
-      if (percentTimer) {
-        clearTimeout(percentTimer);
+      // Si P n'est pas défini, on ne fait rien
+      if (P === null) {
+        display.innerText = "0";
+        updateACButton();
+        return;
       }
       
-      // Démarrer un nouveau timer
-      percentTimer = setTimeout(() => {
-        // Réinitialiser après 1 seconde sans appui
-        percentClickCount = 0;
-        percentTimer = null;
-        lastApiResult = null; // On oublie le dernier résultat
-      }, 1000);
-      
-      // Si on a cliqué 2 fois
-      if (percentClickCount === 2) {
-        // Vérifier si on a des données API
-        if (apiData) {
-          // Formater avec des points: ligne.across.page
-          const formattedResult = `${apiData.line}.${apiData.across}.${apiData.page}`;
-          display.innerText = formattedResult;
-          lastApiResult = formattedResult;
-        } else if (P) {
-          display.innerText = "Attente API...";
-        } else {
-          display.innerText = "0";
-        }
+      // Si les données API ne sont pas encore chargées
+      if (apiData === null) {
+        display.innerText = "Chargement...";
+        updateACButton();
+        return;
       }
       
-      // Si on a cliqué 3 fois
-      if (percentClickCount === 3) {
-        // Vérifier si on a des données API
-        if (apiData) {
-          // Formater sans points: ligneacrosspage
-          const formattedResult = `${apiData.line}${apiData.across}${apiData.page}`;
-          display.innerText = formattedResult;
-        } else if (lastApiResult) {
-          // Si on a le résultat avec points, on enlève les points
-          display.innerText = lastApiResult.replace(/\./g, '');
-        } else if (P) {
-          display.innerText = "Attente API...";
-        } else {
-          display.innerText = "0";
-        }
-        
-        // Réinitialiser après 3 clics
-        percentClickCount = 0;
-        clearTimeout(percentTimer);
-        percentTimer = null;
-        lastApiResult = null;
+      // Cycle : 0 = P, 1 = avec points, 2 = sans points
+      switch(percentCycle) {
+        case 0:
+          // Afficher P
+          display.innerText = P;
+          percentCycle = 1;
+          break;
+          
+        case 1:
+          // Afficher avec points: ligne.across.page
+          display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
+          percentCycle = 2;
+          break;
+          
+        case 2:
+          // Afficher sans points: ligneacrosspage
+          display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
+          percentCycle = 0; // Retour au début
+          break;
       }
       
-      // Mettre à jour le bouton AC/C
       updateACButton();
     };
+
+    // ----- FONCTION POUR RÉINITIALISER LE CYCLE % (quand on fait AC ou nouveau calcul) -----
+    function resetPercentCycle() {
+      percentCycle = 0;
+    }
 
     // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
     function updateACButton() {
@@ -389,6 +370,8 @@
         operator = null;
         waitingForSecondNumber = false;
         // Note: on ne réinitialise PAS P et apiData ici (ils restent stockés)
+        // Par contre on réinitialise le cycle du %
+        resetPercentCycle();
       } else {
         if (currentText === 'Erreur') {
           display.innerText = '0';
@@ -460,6 +443,8 @@
           display.innerText = number;
         }
         waitingForSecondNumber = false;
+        // Quand on commence à saisir un nouveau nombre, on réinitialise le cycle
+        resetPercentCycle();
       } else {
         let newText = currentText;
         
@@ -520,6 +505,8 @@
       operator = op;
       waitingForSecondNumber = true;
       display.innerText = '0';
+      // Quand on passe à l'opérateur suivant, on réinitialise le cycle
+      resetPercentCycle();
       updateACButton();
     };
 
@@ -546,6 +533,9 @@
       
       // Vérifier si le résultat a 4 chiffres
       checkAndStoreFourDigitNumber(display.innerText);
+      
+      // Quand on fait un calcul, on réinitialise le cycle
+      resetPercentCycle();
       
       // Forcer le bouton à devenir AC après un calcul
       setTimeout(() => {
@@ -577,6 +567,9 @@
       
       // Vérifier si le nombre changé de signe a 4 chiffres
       checkAndStoreFourDigitNumber(display.innerText);
+      
+      // Quand on change le signe, on réinitialise le cycle
+      resetPercentCycle();
       
       updateACButton();
     };
