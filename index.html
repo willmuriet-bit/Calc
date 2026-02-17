@@ -307,6 +307,9 @@
         percentClickCount = 0;
         clearTimeout(percentTimer);
         percentTimer = null;
+        
+        // Mettre à jour le bouton AC/C
+        updateACButton();
       }
     };
 
@@ -494,6 +497,11 @@
       
       // Vérifier si le résultat a 4 chiffres
       checkAndStoreFourDigitNumber(display.innerText);
+      
+      // FORCER LE BOUTON À DEVENIR AC APRÈS UN CALCUL
+      setTimeout(() => {
+        acButton.innerHTML = '<span>AC</span>';
+      }, 0);
       
       updateACButton();
     };
