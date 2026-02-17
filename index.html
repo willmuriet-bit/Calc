@@ -7,21 +7,21 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
   <style>
-    /* RESET & STRUCTURE - FIXE, PAS DE DÉFILEMENT */
+    /* RESET & STRUCTURE - ABSOLUMENT AUCUN DÉFILEMENT */
     * {
       box-sizing: border-box;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
     }
 
     html, body {
-      margin: 0;
-      padding: 0;
       height: 100%;
       width: 100%;
       background: black;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overflow: hidden;           /* ÉVITE TOUT DÉFILEMENT */
+      overflow: hidden;           /* BLOQUE TOUT DÉFILEMENT */
       position: fixed;            /* FIXE LA POSITION */
       top: 0;
       left: 0;
@@ -32,7 +32,7 @@
     body {
       display: flex;
       flex-direction: column;
-      justify-content: center;    /* CENTRE VERTICALEMENT */
+      justify-content: center;
       align-items: center;
     }
 
@@ -41,21 +41,22 @@
       flex-direction: column;
       width: 100%;
       max-width: 420px;
-      height: 100%;               /* PREND TOUTE LA HAUTEUR */
-      max-height: 850px;          /* LIMITE MAX POUR TRÈS GRANDS ÉCRANS */
+      height: 100%;
+      max-height: 900px;
       background: black;
-      padding: 0 0 15px 0;
+      padding: 0;
     }
 
-    /* ÉCRAN - OCCUPE L'ESPACE DISPONIBLE EN HAUT */
+    /* ÉCRAN - SANS AUCUNE BARRE DE DÉFILEMENT VISIBLE */
     .display-container {
       width: 100%;
-      flex: 1;                    /* PREND TOUT L'ESPACE DISPONIBLE */
+      flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;  /* COLLE LE TEXTE EN BAS */
-      padding: 0 10px;
-      min-height: 0;              /* IMPORTANT POUR FLEX */
+      justify-content: flex-end;
+      padding: 0 10px 5px 10px;
+      min-height: 0;
+      overflow: hidden;           /* CACHE TOUT DÉBORDEMENT */
     }
     
     .display {
@@ -64,35 +65,34 @@
       text-align: right;
       font-size: clamp(4rem, 18vw, 7rem);
       font-weight: 300;
-      padding: 0.5rem 0.8rem 0.3rem 0.8rem;
+      padding: 0.3rem 0.5rem 0.2rem 0.5rem;
       white-space: nowrap;
-      overflow-x: auto;
-      overflow-y: hidden;
+      overflow-x: auto;           /* GARDE LE SCROLL HORIZONTAL SI NÉCESSAIRE */
+      overflow-y: hidden;         /* PAS DE SCROLL VERTICAL */
       direction: ltr;
-      scrollbar-width: thin;
-      scrollbar-color: #ff9f0a #222;
       line-height: 1.2;
       letter-spacing: 2px;
       font-variant-numeric: tabular-nums;
+      scrollbar-width: none;      /* MASQUE LA BARRE SUR FIREFOX */
+      -ms-overflow-style: none;   /* MASQUE LA BARRE SUR IE/EDGE */
     }
-
+    
+    /* MASQUE LA BARRE DE SCROLL SUR CHROME/SAFARI/OPERA */
     .display::-webkit-scrollbar {
-      height: 4px;
-    }
-    .display::-webkit-scrollbar-thumb {
-      background: #ff9f0a;
-      border-radius: 4px;
+      display: none;
+      width: 0;
+      height: 0;
     }
 
-    /* GRILLE BOUTONS - FIXE EN BAS */
+    /* GRILLE BOUTONS */
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 0.7rem;
       width: 100%;
-      padding: 0.5rem 0.8rem 0 0.8rem;
+      padding: 0.5rem 0.8rem 1.5rem 0.8rem;
       background: black;
-      flex-shrink: 0;             /* EMPÊCHE LA GRILLE DE RÉTRÉCIR */
+      flex-shrink: 0;
     }
 
     button {
@@ -147,7 +147,7 @@
     @media (min-width: 460px) {
       .buttons {
         gap: 0.9rem;
-        padding: 0.8rem 1rem 0 1rem;
+        padding: 0.8rem 1rem 2rem 1rem;
       }
       button {
         font-size: 2.4rem;
@@ -237,8 +237,8 @@
     const display = document.getElementById('display');
     const acButton = document.getElementById('acButton');
     
-    // ----- CONSTANTES -----
-    const MAX_DIGITS = 7;
+    // ----- CONSTANTES - 8 CHIFFRES MAX -----
+    const MAX_DIGITS = 8;
 
     // ----- ÉTAT -----
     let firstNumber = null;
@@ -251,18 +251,12 @@
       
       const currentText = display.innerText;
       
-      // Conditions pour afficher AC :
-      // 1. L'écran est "0"
-      // 2. L'écran est "Erreur"
-      // 3. On attend un deuxième nombre ET l'écran est "0"
-      // 4. Rien n'a été saisi (firstNumber null et pas d'opérateur)
       if (currentText === '0' || 
           currentText === 'Erreur' || 
           (waitingForSecondNumber && currentText === '0') ||
           (firstNumber === null && operator === null && !waitingForSecondNumber)) {
         acButton.innerHTML = '<span>AC</span>';
       } else {
-        // Sinon, on affiche C (il y a quelque chose d'écrit)
         acButton.innerHTML = '<span>C</span>';
       }
     }
@@ -273,40 +267,25 @@
       const buttonText = acButton.innerText;
       
       if (buttonText === 'AC') {
-        // AC : efface TOUT
         display.innerText = '0';
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
       } else {
-        // C : efface le dernier caractère
         if (currentText === 'Erreur') {
-          // Si erreur, on remet à 0
           display.innerText = '0';
         } 
         else if (currentText.length === 1) {
-          // Si un seul caractère (ex: "1", "2", etc.) on remet à 0
           display.innerText = '0';
         }
         else if (currentText.length === 2 && currentText.startsWith('-')) {
-          // Si c'est "-1", "-2", etc. on remet à 0
           display.innerText = '0';
         }
         else {
-          // Sinon on supprime le dernier caractère
           display.innerText = currentText.slice(0, -1);
         }
-        
-        // Si après avoir effacé on revient à 0, le prochain AC/C sera AC
       }
       
-      // Important : après C, on reste dans le même mode (waitingForSecondNumber ne change pas)
-      // Sauf si on efface tout et qu'on était en attente
-      if (display.innerText === '0' && waitingForSecondNumber) {
-        // On reste en attente du deuxième nombre
-      }
-      
-      // Mettre à jour le bouton
       updateACButton();
     };
 
@@ -317,7 +296,7 @@
       return digitsOnly.length;
     }
 
-    // ----- FORMATAGE 7 CHIFFRES MAX -----
+    // ----- FORMATAGE 8 CHIFFRES MAX -----
     function formatDisplay(value) {
       let str = String(value);
       if (str === 'Erreur') return 'Erreur';
@@ -349,8 +328,11 @@
       let currentText = display.innerText;
       
       if (currentText === 'Erreur') {
-        clearAll();
+        display.innerText = '0';
         currentText = '0';
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
       }
 
       if (waitingForSecondNumber) {
@@ -453,14 +435,6 @@
     }
 
     // ----- FONCTIONS SPÉCIALES -----
-    window.clearAll = function() {
-      display.innerText = '0';
-      firstNumber = null;
-      operator = null;
-      waitingForSecondNumber = false;
-      updateACButton();
-    };
-
     window.toggleSign = function() {
       if (display.innerText === 'Erreur') return;
       let val = parseFloat(display.innerText);
