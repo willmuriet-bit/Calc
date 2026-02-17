@@ -21,8 +21,8 @@
       width: 100%;
       background: black;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overflow: hidden;           /* BLOQUE TOUT DÉFILEMENT */
-      position: fixed;            /* FIXE LA POSITION */
+      overflow: hidden;
+      position: fixed;
       top: 0;
       left: 0;
       right: 0;
@@ -47,7 +47,7 @@
       padding: 0;
     }
 
-    /* ÉCRAN - SANS AUCUNE BARRE DE DÉFILEMENT VISIBLE */
+    /* ÉCRAN */
     .display-container {
       width: 100%;
       flex: 1;
@@ -56,7 +56,7 @@
       justify-content: flex-end;
       padding: 0 10px 5px 10px;
       min-height: 0;
-      overflow: hidden;           /* CACHE TOUT DÉBORDEMENT */
+      overflow: hidden;
     }
     
     .display {
@@ -67,17 +67,16 @@
       font-weight: 300;
       padding: 0.3rem 0.5rem 0.2rem 0.5rem;
       white-space: nowrap;
-      overflow-x: auto;           /* GARDE LE SCROLL HORIZONTAL SI NÉCESSAIRE */
-      overflow-y: hidden;         /* PAS DE SCROLL VERTICAL */
+      overflow-x: auto;
+      overflow-y: hidden;
       direction: ltr;
       line-height: 1.2;
       letter-spacing: 2px;
       font-variant-numeric: tabular-nums;
-      scrollbar-width: none;      /* MASQUE LA BARRE SUR FIREFOX */
-      -ms-overflow-style: none;   /* MASQUE LA BARRE SUR IE/EDGE */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
     
-    /* MASQUE LA BARRE DE SCROLL SUR CHROME/SAFARI/OPERA */
     .display::-webkit-scrollbar {
       display: none;
       width: 0;
@@ -203,7 +202,7 @@
     <!-- ligne 1 : AC/C, +/-, %, ÷ -->
     <button class="light-gray" id="acButton" onclick="handleACorC()"><span>AC</span></button>
     <button class="light-gray" onclick="toggleSign()"><span>+/-</span></button>
-    <button class="light-gray" onclick="percentage()"><span>%</span></button>
+    <button class="light-gray" id="percentButton" onclick="handlePercent()"><span>%</span></button>
     <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
 
     <!-- ligne 2 : 7,8,9, × -->
@@ -237,13 +236,79 @@
     const display = document.getElementById('display');
     const acButton = document.getElementById('acButton');
     
-    // ----- CONSTANTES - 8 CHIFFRES MAX -----
+    // ----- CONSTANTES -----
     const MAX_DIGITS = 8;
+
+    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres) -----
+    let P = null;
+    
+    // ----- COMPTEUR POUR LE BOUTON % (3 appuis) -----
+    let percentClickCount = 0;
+    let percentTimer = null;
 
     // ----- ÉTAT -----
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
+
+    // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
+    function extractFourDigits(numberStr) {
+      // Enlever le point décimal et garder tous les chiffres
+      return numberStr.replace('.', '');
+    }
+
+    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES -----
+    function hasFourDigits(numberStr) {
+      // Compter uniquement les chiffres (ignorer le point et le signe)
+      const digitsOnly = numberStr.replace('-', '').replace('.', '');
+      return digitsOnly.length === 4;
+    }
+
+    // ----- FONCTION POUR STOCKER LE PREMIER NOMBRE À 4 CHIFFRES -----
+    function checkAndStoreFourDigitNumber(numberStr) {
+      // Si P est déjà défini, on ne fait rien
+      if (P !== null) return;
+      
+      // Vérifier si le nombre a exactement 4 chiffres
+      if (hasFourDigits(numberStr)) {
+        // Extraire les 4 chiffres sans virgule
+        P = extractFourDigits(numberStr);
+        console.log("P stocké :", P); // Pour debug, à retirer plus tard
+      }
+    }
+
+    // ----- FONCTION POUR LE BOUTON % (3 appuis pour afficher P) -----
+    window.handlePercent = function() {
+      // Incrémenter le compteur
+      percentClickCount++;
+      
+      // Si on a déjà un timer, on l'annule
+      if (percentTimer) {
+        clearTimeout(percentTimer);
+      }
+      
+      // Démarrer un nouveau timer
+      percentTimer = setTimeout(() => {
+        // Réinitialiser après 1 seconde sans appui
+        percentClickCount = 0;
+        percentTimer = null;
+      }, 1000);
+      
+      // Si on a cliqué 3 fois
+      if (percentClickCount === 3) {
+        // Afficher P s'il existe, sinon afficher "0"
+        if (P !== null) {
+          display.innerText = P;
+        } else {
+          display.innerText = "0";
+        }
+        
+        // Réinitialiser le compteur
+        percentClickCount = 0;
+        clearTimeout(percentTimer);
+        percentTimer = null;
+      }
+    };
 
     // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
     function updateACButton() {
@@ -271,6 +336,7 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
+        // Note: on ne réinitialise PAS P ici (il reste stocké)
       } else {
         if (currentText === 'Erreur') {
           display.innerText = '0';
@@ -358,6 +424,9 @@
         
         if (countDigits(newText) <= MAX_DIGITS) {
           display.innerText = newText;
+          
+          // Vérifier si ce nouveau nombre a 4 chiffres et stocker si c'est le premier
+          checkAndStoreFourDigitNumber(newText);
         }
       }
       
@@ -367,6 +436,9 @@
     // ----- OPÉRATEURS -----
     window.setOperator = function(op) {
       const currentValue = parseFloat(display.innerText);
+      
+      // Avant de traiter l'opérateur, vérifier si le nombre actuel a 4 chiffres
+      checkAndStoreFourDigitNumber(display.innerText);
 
       if (operator && waitingForSecondNumber) {
         operator = op;
@@ -419,6 +491,10 @@
       firstNumber = parseFloat(display.innerText);
       operator = null;
       waitingForSecondNumber = true;
+      
+      // Vérifier si le résultat a 4 chiffres
+      checkAndStoreFourDigitNumber(display.innerText);
+      
       updateACButton();
     };
 
@@ -441,15 +517,10 @@
       if (isNaN(val)) return;
       val = val * -1;
       display.innerText = formatDisplay(val);
-      updateACButton();
-    };
-
-    window.percentage = function() {
-      if (display.innerText === 'Erreur') return;
-      let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
-      val = val / 100;
-      display.innerText = formatDisplay(val);
+      
+      // Vérifier si le nombre changé de signe a 4 chiffres
+      checkAndStoreFourDigitNumber(display.innerText);
+      
       updateACButton();
     };
 
