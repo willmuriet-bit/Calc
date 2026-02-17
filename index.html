@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calculatrice</title>
 
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
 <style>
 body {
     margin: 0;
@@ -72,6 +76,7 @@ button:active {
 
 <body>
 
+<!-- Calculatrice -->
 <div class="calculator">
     <div id="display" class="display">0</div>
 
@@ -103,8 +108,8 @@ button:active {
 </div>
 
 <script>
+// Calculatrice
 let display = document.getElementById("display");
-
 let firstNumber = null;
 let operator = null;
 let waitingForSecondNumber = false;
@@ -131,44 +136,53 @@ function setOperator(op) {
 
 function calculate() {
     if (operator === null || waitingForSecondNumber) return;
-
     let secondNumber = parseFloat(display.innerText);
     let result = 0;
-
     switch (operator) {
-        case '+':
-            result = firstNumber + secondNumber;
-            break;
-        case '-':
-            result = firstNumber - secondNumber;
-            break;
-        case '*':
-            result = firstNumber * secondNumber;
-            break;
-        case '/':
-            result = secondNumber !== 0 ? firstNumber / secondNumber : "Erreur";
-            break;
+        case '+': result = firstNumber + secondNumber; break;
+        case '-': result = firstNumber - secondNumber; break;
+        case '*': result = firstNumber * secondNumber; break;
+        case '/': result = secondNumber !== 0 ? firstNumber / secondNumber : "Erreur"; break;
     }
-
     display.innerText = result;
     operator = null;
     firstNumber = result;
 }
 
-function clearAll() {
-    display.innerText = "0";
-    firstNumber = null;
-    operator = null;
-    waitingForSecondNumber = false;
-}
+function clearAll() { display.innerText = "0"; firstNumber=null; operator=null; waitingForSecondNumber=false; }
+function toggleSign() { display.innerText = parseFloat(display.innerText) * -1; }
+function percentage() { display.innerText = parseFloat(display.innerText)/100; }
 
-function toggleSign() {
-    display.innerText = parseFloat(display.innerText) * -1;
-}
+// PWA "Ajouter à l'écran d'accueil"
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
 
-function percentage() {
-    display.innerText = parseFloat(display.innerText) / 100;
-}
+    const addBtn = document.createElement('button');
+    addBtn.innerText = "Ajouter à l'écran d'accueil";
+    addBtn.style.position = "fixed";
+    addBtn.style.top = "10px";
+    addBtn.style.left = "50%";
+    addBtn.style.transform = "translateX(-50%)";
+    addBtn.style.padding = "10px 20px";
+    addBtn.style.fontSize = "18px";
+    addBtn.style.background = "#ff9f0a";
+    addBtn.style.color = "white";
+    addBtn.style.border = "none";
+    addBtn.style.borderRadius = "10px";
+    addBtn.style.cursor = "pointer";
+    addBtn.style.zIndex = "1000";
+    document.body.appendChild(addBtn);
+
+    addBtn.addEventListener('click', () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            addBtn.remove();
+            deferredPrompt = null;
+        });
+    });
+});
 </script>
 
 </body>
