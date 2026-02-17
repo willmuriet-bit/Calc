@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
   <style>
-    /* RESET & STRUCTURE */
+    /* RESET & STRUCTURE - ABSOLUMENT AUCUN DÉFILEMENT */
     * {
       box-sizing: border-box;
       user-select: none;
@@ -32,26 +32,8 @@
     body {
       display: flex;
       flex-direction: column;
-    }
-
-    /* ===== BARRE SIMPLIFIÉE - JUSTE L'HEURE ===== */
-    .simple-status-bar {
-      height: 42px;
-      background: #000000;
-      color: #ffffff;
-      font-family: 'Roboto', monospace;
-      font-size: 16px;
-      font-weight: 500;
-      display: flex;
       justify-content: center;
       align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10000;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid #222;
     }
 
     .calculator {
@@ -60,7 +42,7 @@
       width: 100%;
       max-width: 420px;
       height: 100%;
-      margin: 42px auto 0 auto; /* Décale sous notre barre */
+      max-height: 900px;
       background: black;
       padding: 0;
     }
@@ -183,9 +165,10 @@
       }
     }
 
+    /* bouton pour installer la PWA */
     .install-btn {
       position: fixed;
-      top: 54px;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%);
       background: #ff9f0a;
@@ -207,8 +190,6 @@
   </style>
 </head>
 <body>
-  <!-- BARRE SIMPLIFIÉE - JUSTE L'HEURE -->
-  <div class="simple-status-bar" id="simpleTime">14:30</div>
 
 <div class="calculator">
   <!-- AFFICHEUR -->
@@ -220,7 +201,7 @@
   <div class="buttons">
     <!-- ligne 1 : AC/C, +/-, %, ÷ -->
     <button class="light-gray" id="acButton" onclick="handleACorC()"><span>AC</span></button>
-    <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()"><span>+/-</span></button>
+    <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()" onmousedown="startLongPress()" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress()" ontouchend="cancelLongPress()" ontouchcancel="cancelLongPress()"><span>+/-</span></button>
     <button class="light-gray" id="percentButton" onclick="handlePercent()"><span>%</span></button>
     <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
 
@@ -256,153 +237,68 @@
     const acButton = document.getElementById('acButton');
     const toggleSignButton = document.getElementById('toggleSignButton');
     const percentButton = document.getElementById('percentButton');
-    const simpleTime = document.getElementById('simpleTime');
     
     // ----- CONSTANTES -----
     const MAX_DIGITS = 8;
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
+    const LONG_PRESS_DURATION = 1000; // 1 seconde
 
-    // ----- VARIABLE P -----
+    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres tapé par l'utilisateur) -----
     let P = null;
     
-    // ----- DONNÉES API -----
+    // ----- VARIABLE POUR STOCKER LES DONNÉES DE L'API -----
     let apiData = null;
     
-    // ----- CYCLE DU % -----
+    // ----- COMPTEUR POUR LE BOUTON % (cycle: 0=P, 1=avec points, 2=sans points) -----
     let percentCycle = 0;
+    
+    // ----- DRAPEAU POUR SAVOIR SI LE BOUTON % EST EN MODE SECRET OU NORMAL -----
+    let percentMode = 'secret'; // 'secret' ou 'normal'
 
-    // ----- ÉTAT CALCULATRICE -----
+    // ----- ÉTAT -----
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
+    
+    // ----- DRAPEAU POUR SAVOIR SI ON EST EN TRAIN DE TAPER -----
     let isTyping = false;
+    
+    // ----- DRAPEAU POUR SAVOIR SI ON A DÉJÀ TRAITÉ LE NOMBRE ACTUEL -----
     let currentNumberProcessed = false;
     
-    // ----- VARIABLES POUR LA COMBINAISON SECRÈTE -----
-    let toggleSignPressed = false;
-    let secretCombinationTimer = null;
-    let secretModeActive = false; // true = affiche ligne:across:page dans la barre
-    
-    // ----- TIMER POUR L'HEURE -----
-    let clockInterval;
+    // ----- TIMER POUR L'APPUI LONG -----
+    let longPressTimer = null;
 
-    // ----- FONCTION POUR METTRE À JOUR L'HEURE RÉELLE -----
-    function updateClock() {
-      if (secretModeActive) return; // Ne pas mettre à jour l'heure si mode secret actif
-      
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      simpleTime.textContent = `${hours}:${minutes}`;
-    }
-
-    // ----- FONCTION POUR AFFICHER LE SECRET DANS LA BARRE -----
-    function showSecretInStatusBar() {
-      if (apiData) {
-        simpleTime.textContent = `${apiData.line}:${apiData.across}:${apiData.page}`;
-        secretModeActive = true;
-      } else if (P) {
-        simpleTime.textContent = "Attente API...";
-      } else {
-        simpleTime.textContent = "P non défini";
-      }
-    }
-
-    // ----- FONCTION POUR REVENIR À L'HEURE NORMALE -----
-    function resetStatusBarToClock() {
-      secretModeActive = false;
-      updateClock();
-    }
-
-    // ----- GESTIONNAIRE SPÉCIAL POUR +/- -----
-    window.handleToggleSign = function() {
-      // Si on est en mode secret, un simple clic sur +/- désactive le mode secret
-      if (secretModeActive) {
-        resetStatusBarToClock();
-        toggleSignPressed = false;
-        return;
+    // ----- FONCTION POUR DÉMARRER L'APPUI LONG -----
+    window.startLongPress = function() {
+      // Annuler tout timer existant
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
       }
       
-      // Sinon, on active le "premier clic" de la combinaison
-      toggleSignPressed = true;
-      
-      // Timer pour annuler la combinaison après 2 secondes
-      if (secretCombinationTimer) {
-        clearTimeout(secretCombinationTimer);
-      }
-      secretCombinationTimer = setTimeout(() => {
-        toggleSignPressed = false;
-        secretCombinationTimer = null;
-      }, 2000);
-      
-      // Aussi exécuter la fonction normale de toggleSign
-      performToggleSign();
+      // Démarrer un nouveau timer
+      longPressTimer = setTimeout(() => {
+        // Après 1 seconde, réinitialiser le mode du bouton %
+        percentMode = 'normal';
+        percentCycle = 0;
+        console.log("Mode % réinitialisé à 'normal'");
+        
+        // Afficher un retour visuel (optionnel)
+        percentButton.style.filter = 'brightness(1.5)';
+        setTimeout(() => {
+          percentButton.style.filter = '';
+        }, 200);
+        
+        longPressTimer = null;
+      }, LONG_PRESS_DURATION);
     };
 
-    // ----- FONCTION NORMALE DE TOGGLE SIGN -----
-    function performToggleSign() {
-      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
-      let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
-      val = val * -1;
-      display.innerText = formatDisplay(val);
-      currentNumberProcessed = false;
-      percentCycle = 0;
-      updateACButton();
-    }
-
-    // ----- GESTIONNAIRE SPÉCIAL POUR % -----
-    window.handlePercent = function() {
-      // Vérifier si c'est le deuxième clic de la combinaison secrète
-      if (toggleSignPressed) {
-        // Combinaison détectée : +/- puis %
-        showSecretInStatusBar();
-        
-        // Réinitialiser la combinaison
-        toggleSignPressed = false;
-        if (secretCombinationTimer) {
-          clearTimeout(secretCombinationTimer);
-          secretCombinationTimer = null;
-        }
-        
-        // Ne pas exécuter le comportement normal de %
-        return;
+    // ----- FONCTION POUR ANNULER L'APPUI LONG -----
+    window.cancelLongPress = function() {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
       }
-      
-      // Sinon, comportement normal de %
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      if (P === null) {
-        display.innerText = "0";
-        updateACButton();
-        return;
-      }
-      
-      if (apiData === null) {
-        display.innerText = "Chargement...";
-        updateACButton();
-        return;
-      }
-      
-      switch(percentCycle) {
-        case 0:
-          display.innerText = P;
-          percentCycle = 1;
-          break;
-        case 1:
-          display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
-          percentCycle = 2;
-          break;
-        case 2:
-          display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
-          percentCycle = 0;
-          break;
-      }
-      
-      isTyping = false;
-      updateACButton();
     };
 
     // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
@@ -416,21 +312,32 @@
       return digitsOnly.length === 4;
     }
 
-    // ----- FONCTION POUR VALIDER ET STOCKER P -----
+    // ----- FONCTION POUR VALIDER ET STOCKER LE NOMBRE À 4 CHIFFRES TAPÉ -----
     function validateAndStoreFourDigitNumber() {
       const currentText = display.innerText;
       
+      // Ne pas stocker si on est en train d'afficher un résultat du cycle %
       if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
+      
+      // Ne pas stocker les résultats de calcul
       if (!isTyping) return;
+      
+      // Ne pas stocker si on a déjà traité ce nombre
       if (currentNumberProcessed) return;
       
       if (hasFourDigits(currentText)) {
+        // Extraire les 4 chiffres sans virgule
         const fourDigits = extractFourDigits(currentText);
         
+        // Si c'est le premier nombre à 4 chiffres qu'on valide
         if (P === null) {
           P = fourDigits;
-          console.log("P validé et stocké :", P);
+          console.log("P validé et stocké (nombre tapé) :", P);
+          
+          // Dès que P est stocké, on appelle l'API
           fetchApiData(P);
+          
+          // Marquer ce nombre comme traité
           currentNumberProcessed = true;
         }
       }
@@ -446,13 +353,88 @@
           apiData = data[code];
           console.log("Données API pour", code, ":", apiData);
         } else {
-          console.log("Code non trouvé:", code);
+          console.log("Code non trouvé dans l'API:", code);
           apiData = null;
         }
       } catch (error) {
-        console.error("Erreur API:", error);
+        console.error("Erreur lors de l'appel API:", error);
         apiData = null;
       }
+    }
+
+    // ----- FONCTION POUR LE BOUTON % -----
+    window.handlePercent = function() {
+      // Si on est en mode normal, faire un pourcentage classique
+      if (percentMode === 'normal') {
+        performNormalPercentage();
+        return;
+      }
+      
+      // Sinon, mode secret (comportement cyclique)
+      performSecretPercent();
+    };
+
+    // ----- FONCTION POUR LE POURCENTAGE NORMAL -----
+    function performNormalPercentage() {
+      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+      let val = parseFloat(display.innerText);
+      if (isNaN(val)) return;
+      val = val / 100;
+      display.innerText = formatDisplay(val);
+      updateACButton();
+    }
+
+    // ----- FONCTION POUR LE MODE SECRET (cycle) -----
+    function performSecretPercent() {
+      // Quand on appuie sur %, le bouton C devient AC
+      setTimeout(() => {
+        acButton.innerHTML = '<span>AC</span>';
+      }, 0);
+      
+      // Si P n'est pas défini, on ne fait rien
+      if (P === null) {
+        display.innerText = "0";
+        updateACButton();
+        return;
+      }
+      
+      // Si les données API ne sont pas encore chargées
+      if (apiData === null) {
+        display.innerText = "Chargement...";
+        updateACButton();
+        return;
+      }
+      
+      // Cycle : 0 = P, 1 = avec points, 2 = sans points
+      switch(percentCycle) {
+        case 0:
+          // Afficher P
+          display.innerText = P;
+          percentCycle = 1;
+          break;
+          
+        case 1:
+          // Afficher avec points: ligne.across.page
+          display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
+          percentCycle = 2;
+          break;
+          
+        case 2:
+          // Afficher sans points: ligneacrosspage
+          display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
+          percentCycle = 0; // Retour au début
+          break;
+      }
+      
+      // Quand on affiche un résultat du cycle %, on n'est pas en train de taper
+      isTyping = false;
+      
+      updateACButton();
+    }
+
+    // ----- FONCTION POUR RÉINITIALISER LE CYCLE % -----
+    function resetPercentCycle() {
+      percentCycle = 0;
     }
 
     // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
@@ -461,6 +443,7 @@
       
       const currentText = display.innerText;
       
+      // Dès qu'on a quelque chose de différent de "0", on met C
       if (currentText === '0' || 
           currentText === 'Erreur' || 
           currentText === 'Chargement...' ||
@@ -483,8 +466,8 @@
         waitingForSecondNumber = false;
         isTyping = false;
         currentNumberProcessed = false;
-        percentCycle = 0;
-        // AC ne modifie PAS l'heure
+        // Note: on ne réinitialise PAS P et apiData ici (ils restent stockés)
+        resetPercentCycle();
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
@@ -503,7 +486,9 @@
         }
         else {
           display.innerText = currentText.slice(0, -1);
+          // On reste en mode "typing" car on est en train de corriger
           isTyping = true;
+          // On réinitialise le flag de traitement car le nombre a changé
           currentNumberProcessed = false;
         }
       }
@@ -511,133 +496,14 @@
       updateACButton();
     };
 
-    // ----- AJOUTER UN CHIFFRE -----
-    window.appendNumber = function(number) {
-      let currentText = display.innerText;
-      
-      if (currentText === 'Erreur' || currentText === 'Chargement...') {
-        display.innerText = '0';
-        currentText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-      }
-
-      if (waitingForSecondNumber) {
-        if (number === '.') {
-          display.innerText = '0.';
-        } else {
-          display.innerText = number;
-        }
-        waitingForSecondNumber = false;
-        isTyping = true;
-        currentNumberProcessed = false;
-      } else {
-        let newText = currentText;
-        
-        if (number === '.') {
-          if (currentText.includes('.')) return;
-          newText = currentText + '.';
-        } else {
-          if (currentText === '0') {
-            newText = number;
-          } else {
-            newText = currentText + number;
-          }
-        }
-        
-        if (countDigits(newText) <= MAX_DIGITS) {
-          display.innerText = newText;
-          isTyping = true;
-          currentNumberProcessed = false;
-        }
-      }
-      
-      updateACButton();
-    };
-
-    // ----- OPÉRATEURS -----
-    window.setOperator = function(op) {
-      validateAndStoreFourDigitNumber();
-
-      if (operator && waitingForSecondNumber) {
-        operator = op;
-        updateACButton();
-        return;
-      }
-
-      if (firstNumber !== null && operator && !waitingForSecondNumber) {
-        let secondNumber = parseFloat(display.innerText);
-        let result = operate(operator, firstNumber, secondNumber);
-        if (result === 'Erreur') {
-          display.innerText = 'Erreur';
-          firstNumber = null;
-          operator = null;
-          waitingForSecondNumber = false;
-          isTyping = false;
-          currentNumberProcessed = false;
-          updateACButton();
-          return;
-        } else {
-          const formattedResult = formatDisplay(result);
-          display.innerText = formattedResult;
-          firstNumber = parseFloat(formattedResult);
-          isTyping = false;
-          currentNumberProcessed = false;
-        }
-      } else {
-        firstNumber = parseFloat(display.innerText);
-        isTyping = false;
-      }
-
-      operator = op;
-      waitingForSecondNumber = true;
-      display.innerText = '0';
-      percentCycle = 0;
-      updateACButton();
-    };
-
-    // ----- CALCUL -----
-    window.calculate = function() {
-      if (!operator || waitingForSecondNumber) return;
-
-      const secondNumber = parseFloat(display.innerText);
-      const result = operate(operator, firstNumber, secondNumber);
-
-      if (result === 'Erreur') {
-        display.innerText = 'Erreur';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-        isTyping = false;
-        currentNumberProcessed = false;
-        updateACButton();
-        return;
-      }
-
-      display.innerText = formatDisplay(result);
-      firstNumber = parseFloat(display.innerText);
-      operator = null;
-      waitingForSecondNumber = true;
-      
-      isTyping = false;
-      currentNumberProcessed = false;
-      percentCycle = 0;
-      
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      updateACButton();
-    };
-
-    // ----- FONCTIONS UTILITAIRES -----
+    // ----- FONCTION POUR COMPTER LES CHIFFRES -----
     function countDigits(str) {
       const withoutSign = str.replace('-', '');
       const digitsOnly = withoutSign.replace('.', '');
       return digitsOnly.length;
     }
 
+    // ----- FORMATAGE 8 CHIFFRES MAX -----
     function formatDisplay(value) {
       let str = String(value);
       if (str === 'Erreur') return 'Erreur';
@@ -664,6 +530,136 @@
       }
     }
 
+    // ----- AJOUTER UN CHIFFRE -----
+    window.appendNumber = function(number) {
+      let currentText = display.innerText;
+      
+      if (currentText === 'Erreur' || currentText === 'Chargement...') {
+        display.innerText = '0';
+        currentText = '0';
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+      }
+
+      if (waitingForSecondNumber) {
+        if (number === '.') {
+          display.innerText = '0.';
+        } else {
+          display.innerText = number;
+        }
+        waitingForSecondNumber = false;
+        resetPercentCycle();
+        isTyping = true; // On commence à taper
+        currentNumberProcessed = false; // Nouveau nombre, pas encore traité
+      } else {
+        let newText = currentText;
+        
+        if (number === '.') {
+          if (currentText.includes('.')) return;
+          newText = currentText + '.';
+        } else {
+          if (currentText === '0') {
+            newText = number;
+          } else {
+            newText = currentText + number;
+          }
+        }
+        
+        if (countDigits(newText) <= MAX_DIGITS) {
+          display.innerText = newText;
+          isTyping = true; // On est en train de taper
+          // On réinitialise le flag de traitement car le nombre a changé
+          currentNumberProcessed = false;
+          // NE PAS STOCKER MAINTENANT, attendre validation par opérateur
+        }
+      }
+      
+      updateACButton();
+    };
+
+    // ----- OPÉRATEURS -----
+    window.setOperator = function(op) {
+      const currentValue = parseFloat(display.innerText);
+      
+      // VALIDER ET STOCKER le nombre à 4 chiffres tapé avant l'opération
+      validateAndStoreFourDigitNumber();
+
+      if (operator && waitingForSecondNumber) {
+        operator = op;
+        updateACButton();
+        return;
+      }
+
+      if (firstNumber !== null && operator && !waitingForSecondNumber) {
+        let secondNumber = currentValue;
+        let result = operate(operator, firstNumber, secondNumber);
+        if (result === 'Erreur') {
+          display.innerText = 'Erreur';
+          firstNumber = null;
+          operator = null;
+          waitingForSecondNumber = false;
+          isTyping = false;
+          currentNumberProcessed = false;
+          updateACButton();
+          return;
+        } else {
+          const formattedResult = formatDisplay(result);
+          display.innerText = formattedResult;
+          firstNumber = parseFloat(formattedResult);
+          isTyping = false; // C'est un résultat, pas en train de taper
+          currentNumberProcessed = false;
+        }
+      } else {
+        firstNumber = currentValue;
+        isTyping = false; // On a validé le nombre avec l'opérateur
+        // Le flag currentNumberProcessed reste true si on a déjà traité ce nombre
+      }
+
+      operator = op;
+      waitingForSecondNumber = true;
+      display.innerText = '0';
+      resetPercentCycle();
+      updateACButton();
+    };
+
+    // ----- CALCUL -----
+    window.calculate = function() {
+      if (!operator || waitingForSecondNumber) return;
+
+      const secondNumber = parseFloat(display.innerText);
+      const result = operate(operator, firstNumber, secondNumber);
+
+      if (result === 'Erreur') {
+        display.innerText = 'Erreur';
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+        isTyping = false;
+        currentNumberProcessed = false;
+        updateACButton();
+        return;
+      }
+
+      display.innerText = formatDisplay(result);
+      firstNumber = parseFloat(display.innerText);
+      operator = null;
+      waitingForSecondNumber = true;
+      
+      // NE PAS STOCKER LE RÉSULTAT, même s'il a 4 chiffres
+      isTyping = false; // C'est un résultat, pas en train de taper
+      currentNumberProcessed = false;
+      
+      resetPercentCycle();
+      
+      // Forcer le bouton à devenir AC après un calcul
+      setTimeout(() => {
+        acButton.innerHTML = '<span>AC</span>';
+      }, 0);
+      
+      updateACButton();
+    };
+
     function operate(op, a, b) {
       switch(op) {
         case '+': return a + b;
@@ -676,9 +672,24 @@
       }
     }
 
-    // ----- INITIALISATION -----
-    updateClock();
-    clockInterval = setInterval(updateClock, 1000);
+    // ----- FONCTIONS SPÉCIALES -----
+    window.toggleSign = function() {
+      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+      let val = parseFloat(display.innerText);
+      if (isNaN(val)) return;
+      val = val * -1;
+      display.innerText = formatDisplay(val);
+      
+      // NE PAS STOCKER, c'est juste un changement de signe
+      // On reste en mode typing si on était en train de taper
+      // Par contre, le nombre a changé donc on réinitialise le flag de traitement
+      currentNumberProcessed = false;
+      
+      resetPercentCycle();
+      updateACButton();
+    };
+
+    // Initialisation
     setTimeout(() => updateACButton(), 0);
 
     // ----- PWA -----
@@ -704,32 +715,6 @@
     window.addEventListener('appinstalled', () => {
       const btn = document.querySelector('.install-btn');
       if (btn) btn.remove();
-    });
-
-    // ----- ACTIVER LE PLEIN ÉCRAN POUR CACHER LA VRAIE BARRE -----
-    function goFullScreen() {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-      } else if (elem.webkitRequestFullscreen) { /* Safari */
-        elem.webkitRequestFullscreen();
-      } else if (elem.msRequestFullscreen) { /* IE/Edge */
-        elem.msRequestFullscreen();
-      }
-    }
-
-    // Demander le plein écran au chargement
-    document.addEventListener('DOMContentLoaded', function() {
-      // Petit délai pour éviter les problèmes de focus
-      setTimeout(goFullScreen, 1000);
-    });
-
-    // Réactiver le plein écran si l'utilisateur sort (optionnel)
-    document.addEventListener('fullscreenchange', function() {
-      if (!document.fullscreenElement) {
-        // Si on sort du plein écran, on le redemande
-        setTimeout(goFullScreen, 500);
-      }
     });
 
   })();
