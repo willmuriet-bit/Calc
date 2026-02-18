@@ -321,7 +321,7 @@
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
     const LONG_PRESS_DURATION = 1000;
 
-    // ----- VARIABLE P -----
+    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres tapé) -----
     let P = null;
     
     // ----- DONNÉES API -----
@@ -391,11 +391,11 @@
         dotClickCount = 0;
         clearTimeout(dotClickTimer);
         dotClickTimer = null;
+        return; // Ne pas ajouter de point
       }
       
-      if (dotClickCount < 3) {
-        performAppendDot();
-      }
+      // Sinon, comportement normal du point
+      performAppendDot();
     };
 
     // ----- FONCTION NORMALE POUR AJOUTER UN POINT -----
@@ -475,41 +475,25 @@
     function validateAndStoreFourDigitNumber() {
       const currentText = display.innerText;
       
-      console.log("Tentative de validation:", currentText, "isTyping:", isTyping, "currentNumberProcessed:", currentNumberProcessed);
+      // Ignorer les résultats du cycle %
+      if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
       
-      // Ne pas stocker si on est en train d'afficher un résultat du cycle %
-      if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') {
-        console.log("⛔ Ignoré: résultat du cycle %");
-        return;
-      }
+      // Ne pas stocker si on n'est pas en train de taper
+      if (!isTyping) return;
       
-      // Ne pas stocker les résultats de calcul
-      if (!isTyping) {
-        console.log("⛔ Ignoré: pas en train de taper");
-        return;
-      }
-      
-      // Ne pas stocker si on a déjà traité ce nombre
-      if (currentNumberProcessed) {
-        console.log("⛔ Ignoré: déjà traité");
-        return;
-      }
+      // Ne pas stocker si déjà traité
+      if (currentNumberProcessed) return;
       
       if (hasExactlyFourDigits(currentText)) {
         const fourDigits = extractFourDigits(currentText);
-        console.log("✅ Nombre à 4 chiffres détecté:", fourDigits);
         
         if (P === null) {
           P = fourDigits;
-          console.log("🎉 P validé et stocké :", P);
+          console.log("P validé et stocké :", P);
           fetchApiData(P);
           currentNumberProcessed = true;
           updateImageText();
-        } else {
-          console.log("ℹ️ P déjà existant:", P);
         }
-      } else {
-        console.log("⛔ Pas 4 chiffres exactement");
       }
     }
 
@@ -663,6 +647,7 @@
       }
 
       if (waitingForSecondNumber) {
+        // Nouveau nombre après opérateur
         if (number === '.') {
           display.innerText = '0.';
         } else {
@@ -671,8 +656,9 @@
         waitingForSecondNumber = false;
         resetPercentCycle();
         isTyping = true;
-        currentNumberProcessed = false;
+        currentNumberProcessed = false; // ← Important: nouveau nombre, pas encore traité
       } else {
+        // On continue de taper le même nombre
         let newText = currentText;
         
         if (number === '.') {
@@ -689,7 +675,7 @@
         if (countDigits(newText) <= MAX_DIGITS) {
           display.innerText = newText;
           isTyping = true;
-          currentNumberProcessed = false;
+          currentNumberProcessed = false; // Le nombre a changé, donc plus traité
         }
       }
       
@@ -698,19 +684,18 @@
 
     // ----- OPÉRATEURS (CORRIGÉ) -----
     window.setOperator = function(op) {
-      console.log("Opérateur cliqué:", op);
-      console.log("État avant - isTyping:", isTyping, "currentNumberProcessed:", currentNumberProcessed);
-      
-      // VALIDER ET STOCKER le nombre à 4 chiffres tapé avant l'opération
+      // 1. D'ABORD valider et stocker le nombre tapé
       validateAndStoreFourDigitNumber();
 
       if (operator && waitingForSecondNumber) {
+        // Changer d'opérateur sans calcul
         operator = op;
         updateACButton();
         return;
       }
 
       if (firstNumber !== null && operator && !waitingForSecondNumber) {
+        // Effectuer le calcul précédent
         let secondNumber = parseFloat(display.innerText);
         let result = operate(operator, firstNumber, secondNumber);
         if (result === 'Erreur') {
@@ -730,15 +715,21 @@
           currentNumberProcessed = false;
         }
       } else {
+        // Premier opérateur après un nombre
         firstNumber = parseFloat(display.innerText);
-        isTyping = false;
+        // ✅ On garde isTyping = true (on a fini de taper ce nombre)
+        // isTyping reste true
       }
 
+      // Préparer la saisie du deuxième nombre
       operator = op;
       waitingForSecondNumber = true;
       display.innerText = '0';
       resetPercentCycle();
       updateACButton();
+      
+      // ✅ Réinitialiser pour le prochain nombre
+      currentNumberProcessed = false;
     };
 
     // ----- CALCUL -----
@@ -747,6 +738,7 @@
 
       const secondNumber = parseFloat(display.innerText);
       
+      // Division secrète
       if (secretMode && operator === '/' && P !== null && apiData !== null) {
         if (hasFourOrMoreDigits(display.innerText)) {
           const acrossStr = apiData.across.toString().padStart(2, '0');
@@ -769,6 +761,7 @@
         }
       }
       
+      // Calcul normal
       const result = operate(operator, firstNumber, secondNumber);
 
       if (result === 'Erreur') {
