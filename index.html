@@ -102,6 +102,7 @@
       left: 287px;
       transform: translate(-50%, -50%);
       white-space: nowrap;
+      pointer-events: none; /* Pour que les clics passent à l'image */
     }
 
     /* ÉCRAN */
@@ -297,8 +298,8 @@
       </div>
     </div>
 
-    <!-- IMAGE PLEIN ÉCRAN (avec texte par-dessus) -->
-    <div class="fullscreen-image" id="fullscreenImage">
+    <!-- IMAGE PLEIN ÉCRAN (avec double clic pour revenir) -->
+    <div class="fullscreen-image" id="fullscreenImage" ondblclick="hideImage()">
       <img src="capture.jpg" alt="Capture">
       <div class="image-text" id="imageText">ligne/across/page - P</div>
     </div>
@@ -338,14 +339,14 @@
     let operator = null;
     let waitingForSecondNumber = false;
     
-    // ----- NOUVELLES VARIABLES POUR P -----
-    let equalPressCount = 0;      // Compteur de = (démarre à 0)
-    let pStored = false;          // true quand P a été trouvé
+    // ----- COMPTEUR POUR P -----
+    let equalPressCount = 0;
+    let pStored = false;
     
     // ----- TIMER POUR L'APPUI LONG -----
     let longPressTimer = null;
     
-    // ----- VARIABLES POUR LES 3 APPUIS SUR "." -----
+    // ----- VARIABLES POUR LE DOUBLE APPUI SUR "." -----
     let dotClickCount = 0;
     let dotClickTimer = null;
 
@@ -356,11 +357,8 @@
 
     // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE EST VALIDE POUR P -----
     function isValidForP(str) {
-      // Vérifier que c'est un nombre sans point décimal
       if (str.includes('.')) return false;
-      
       const num = parseInt(str, 10);
-      // Vérifier que c'est un nombre valide et entre 0 et 9999
       return !isNaN(num) && num >= 0 && num <= 9999;
     }
 
@@ -385,12 +383,12 @@
     }
 
     // ----- FONCTION POUR CACHER L'IMAGE -----
-    function hideImage() {
+    window.hideImage = function() {
       calculator.classList.remove('hidden');
       fullscreenImage.classList.remove('visible');
-    }
+    };
 
-    // ----- GESTIONNAIRE POUR LE BOUTON "." (3 appuis) -----
+    // ----- GESTIONNAIRE POUR LE BOUTON "." (DOUBLE APPUI) -----
     window.handleDotClick = function() {
       // Si le mode secret est désactivé, comportement normal
       if (!secretMode) {
@@ -407,9 +405,9 @@
       dotClickTimer = setTimeout(() => {
         dotClickCount = 0;
         dotClickTimer = null;
-      }, 1000);
+      }, 300); // Délai plus court pour le double clic
       
-      if (dotClickCount === 3) {
+      if (dotClickCount === 2) {
         showImage();
         dotClickCount = 0;
         clearTimeout(dotClickTimer);
@@ -417,7 +415,7 @@
         return; // Ne pas ajouter de point
       }
       
-      // Sinon, comportement normal du point
+      // Sinon, comportement normal du point (premier clic)
       performAppendDot();
     };
 
@@ -445,17 +443,24 @@
       updateACButton();
     }
 
-    // ----- FONCTION POUR DÉMARRER L'APPUI LONG -----
+    // ----- FONCTION POUR DÉMARRER L'APPUI LONG (CYCLIQUE) -----
     window.startLongPress = function() {
       if (longPressTimer) {
         clearTimeout(longPressTimer);
       }
       
       longPressTimer = setTimeout(() => {
-        secretMode = false;
+        // Bascule le mode secret
+        secretMode = !secretMode;
         percentCycle = 0;
-        console.log("Mode secret désactivé (appui long)");
         
+        if (secretMode) {
+          console.log("Mode secret ACTIVÉ (appui long)");
+        } else {
+          console.log("Mode secret DÉSACTIVÉ (appui long)");
+        }
+        
+        // Feedback visuel
         percentButton.style.filter = 'brightness(1.5)';
         setTimeout(() => {
           percentButton.style.filter = '';
@@ -592,7 +597,7 @@
         waitingForSecondNumber = false;
         resetPercentCycle();
         hideImage();
-        // ✅ NE PAS toucher à pStored, equalPressCount, P
+        // ✅ NE PAS toucher à pStored, equalPressCount, P, secretMode
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
@@ -687,7 +692,7 @@
       updateACButton();
     };
 
-    // ----- CALCUL (AVEC LA NOUVELLE LOGIQUE POUR P) -----
+    // ----- CALCUL -----
     window.calculate = function() {
       if (!operator || waitingForSecondNumber) return;
 
@@ -732,7 +737,7 @@
         return;
       }
 
-      // ✅ NOUVELLE LOGIQUE POUR STOCKER P
+      // Stockage de P
       if (!pStored && equalPressCount >= 3) {
         if (isValidForP(currentNumberStr)) {
           const num = parseInt(currentNumberStr, 10);
