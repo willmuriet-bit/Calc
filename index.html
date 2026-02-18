@@ -337,8 +337,6 @@
     let firstNumber = null;
     let operator = null;
     let waitingForSecondNumber = false;
-    let isTyping = false;
-    let currentNumberProcessed = false;
     
     // ----- TIMER POUR L'APPUI LONG -----
     let longPressTimer = null;
@@ -414,13 +412,9 @@
         display.innerText = '0.';
         waitingForSecondNumber = false;
         resetPercentCycle();
-        isTyping = true;
-        currentNumberProcessed = false;
       } else {
         if (currentText.includes('.')) return;
         display.innerText = currentText + '.';
-        isTyping = true;
-        currentNumberProcessed = false;
       }
       
       updateACButton();
@@ -471,29 +465,21 @@
       return digitsOnly.length === 4;
     }
 
-    // ----- FONCTION POUR VALIDER ET STOCKER P -----
-    function validateAndStoreFourDigitNumber() {
-      const currentText = display.innerText;
+    // ----- FONCTION SIMPLE POUR STOCKER P -----
+    function tryToStoreP(currentText) {
+      // Si P est déjà défini, on ne fait rien
+      if (P !== null) return;
       
       // Ignorer les résultats du cycle %
       if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
       
-      // Ne pas stocker si on n'est pas en train de taper
-      if (!isTyping) return;
-      
-      // Ne pas stocker si déjà traité
-      if (currentNumberProcessed) return;
-      
+      // Vérifier si le texte a exactement 4 chiffres
       if (hasExactlyFourDigits(currentText)) {
         const fourDigits = extractFourDigits(currentText);
-        
-        if (P === null) {
-          P = fourDigits;
-          console.log("P validé et stocké :", P);
-          fetchApiData(P);
-          currentNumberProcessed = true;
-          updateImageText();
-        }
+        P = fourDigits;
+        console.log("✅ P stocké :", P);
+        fetchApiData(P);
+        updateImageText();
       }
     }
 
@@ -569,7 +555,6 @@
           break;
       }
       
-      isTyping = false;
       updateACButton();
     }
 
@@ -604,30 +589,21 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
-        isTyping = false;
-        currentNumberProcessed = false;
         resetPercentCycle();
         hideImage();
+        // Note: P n'est PAS réinitialisé
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
-          isTyping = false;
-          currentNumberProcessed = false;
         } 
         else if (currentText.length === 1) {
           display.innerText = '0';
-          isTyping = false;
-          currentNumberProcessed = false;
         }
         else if (currentText.length === 2 && currentText.startsWith('-')) {
           display.innerText = '0';
-          isTyping = false;
-          currentNumberProcessed = false;
         }
         else {
           display.innerText = currentText.slice(0, -1);
-          isTyping = true;
-          currentNumberProcessed = false;
         }
       }
       
@@ -647,7 +623,6 @@
       }
 
       if (waitingForSecondNumber) {
-        // Nouveau nombre après opérateur
         if (number === '.') {
           display.innerText = '0.';
         } else {
@@ -655,10 +630,7 @@
         }
         waitingForSecondNumber = false;
         resetPercentCycle();
-        isTyping = true;
-        currentNumberProcessed = false; // ← Important: nouveau nombre, pas encore traité
       } else {
-        // On continue de taper le même nombre
         let newText = currentText;
         
         if (number === '.') {
@@ -674,28 +646,27 @@
         
         if (countDigits(newText) <= MAX_DIGITS) {
           display.innerText = newText;
-          isTyping = true;
-          currentNumberProcessed = false; // Le nombre a changé, donc plus traité
         }
       }
+      
+      // ✅ TENTER DE STOCKER P À CHAQUE FOIS QU'ON AJOUTE UN CHIFFRE
+      tryToStoreP(display.innerText);
       
       updateACButton();
     };
 
-    // ----- OPÉRATEURS (CORRIGÉ) -----
+    // ----- OPÉRATEURS -----
     window.setOperator = function(op) {
-      // 1. D'ABORD valider et stocker le nombre tapé
-      validateAndStoreFourDigitNumber();
+      // Tenter de stocker P avant l'opération
+      tryToStoreP(display.innerText);
 
       if (operator && waitingForSecondNumber) {
-        // Changer d'opérateur sans calcul
         operator = op;
         updateACButton();
         return;
       }
 
       if (firstNumber !== null && operator && !waitingForSecondNumber) {
-        // Effectuer le calcul précédent
         let secondNumber = parseFloat(display.innerText);
         let result = operate(operator, firstNumber, secondNumber);
         if (result === 'Erreur') {
@@ -703,33 +674,22 @@
           firstNumber = null;
           operator = null;
           waitingForSecondNumber = false;
-          isTyping = false;
-          currentNumberProcessed = false;
           updateACButton();
           return;
         } else {
           const formattedResult = formatDisplay(result);
           display.innerText = formattedResult;
           firstNumber = parseFloat(formattedResult);
-          isTyping = false;
-          currentNumberProcessed = false;
         }
       } else {
-        // Premier opérateur après un nombre
         firstNumber = parseFloat(display.innerText);
-        // ✅ On garde isTyping = true (on a fini de taper ce nombre)
-        // isTyping reste true
       }
 
-      // Préparer la saisie du deuxième nombre
       operator = op;
       waitingForSecondNumber = true;
       display.innerText = '0';
       resetPercentCycle();
       updateACButton();
-      
-      // ✅ Réinitialiser pour le prochain nombre
-      currentNumberProcessed = false;
     };
 
     // ----- CALCUL -----
@@ -748,8 +708,6 @@
           firstNumber = null;
           operator = null;
           waitingForSecondNumber = true;
-          isTyping = false;
-          currentNumberProcessed = false;
           resetPercentCycle();
           
           setTimeout(() => {
@@ -769,8 +727,6 @@
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
-        isTyping = false;
-        currentNumberProcessed = false;
         updateACButton();
         return;
       }
@@ -780,8 +736,6 @@
       operator = null;
       waitingForSecondNumber = true;
       
-      isTyping = false;
-      currentNumberProcessed = false;
       resetPercentCycle();
       
       setTimeout(() => {
@@ -812,7 +766,6 @@
       val = val * -1;
       display.innerText = formatDisplay(val);
       
-      currentNumberProcessed = false;
       resetPercentCycle();
       updateACButton();
     };
