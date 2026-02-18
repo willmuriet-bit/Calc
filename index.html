@@ -102,7 +102,7 @@
       left: 287px;
       transform: translate(-50%, -50%);
       white-space: nowrap;
-      pointer-events: none; /* Pour que les clics passent à l'image */
+      pointer-events: none;
     }
 
     /* ÉCRAN */
@@ -269,7 +269,7 @@
       <div class="buttons">
         <!-- ligne 1 : AC/C, +/-, %, ÷ -->
         <button class="light-gray" id="acButton" onclick="handleACorC()"><span>AC</span></button>
-        <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()" onmousedown="startLongPress()" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()" ontouchstart="startLongPress()" ontouchend="cancelLongPress()" ontouchcancel="cancelLongPress()"><span>+/-</span></button>
+        <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()" onmousedown="startToggleSignLongPress()" onmouseup="cancelToggleSignLongPress()" onmouseleave="cancelToggleSignLongPress()" ontouchstart="startToggleSignLongPress()" ontouchend="cancelToggleSignLongPress()" ontouchcancel="cancelToggleSignLongPress()"><span>+/-</span></button>
         <button class="light-gray" id="percentButton" onclick="handlePercent()"><span>%</span></button>
         <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
 
@@ -292,13 +292,13 @@
         <button class="orange" onclick="setOperator('+')"><span>+</span></button>
 
         <!-- ligne 5 : 0, ., = -->
-        <button class="dark-gray btn-zero" onclick="appendNumber('0')"><span>0</span></button>
+        <button class="dark-gray btn-zero" id="zeroButton" onclick="appendNumber('0')" onmousedown="startZeroLongPress()" onmouseup="cancelZeroLongPress()" onmouseleave="cancelZeroLongPress()" ontouchstart="startZeroLongPress()" ontouchend="cancelZeroLongPress()" ontouchcancel="cancelZeroLongPress()"><span>0</span></button>
         <button class="dark-gray" id="dotButton" onclick="handleDotClick()"><span>.</span></button>
         <button class="orange" onclick="calculate()"><span>=</span></button>
       </div>
     </div>
 
-    <!-- IMAGE PLEIN ÉCRAN (avec double clic pour revenir) -->
+    <!-- IMAGE PLEIN ÉCRAN -->
     <div class="fullscreen-image" id="fullscreenImage" ondblclick="hideImage()">
       <img src="capture.jpg" alt="Capture">
       <div class="image-text" id="imageText">ligne/across/page - P</div>
@@ -313,6 +313,7 @@
     const toggleSignButton = document.getElementById('toggleSignButton');
     const percentButton = document.getElementById('percentButton');
     const dotButton = document.getElementById('dotButton');
+    const zeroButton = document.getElementById('zeroButton');
     const calculator = document.getElementById('calculator');
     const fullscreenImage = document.getElementById('fullscreenImage');
     const imageText = document.getElementById('imageText');
@@ -320,7 +321,8 @@
     // ----- CONSTANTES -----
     const MAX_DIGITS = 8;
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
-    const LONG_PRESS_DURATION = 1000;
+    const TOGGLE_SIGN_LONG_PRESS = 500;      // 0.5 seconde pour +/-
+    const ZERO_LONG_PRESS = 1000;             // 1 seconde pour 0
 
     // ----- VARIABLE P -----
     let P = null;
@@ -343,12 +345,35 @@
     let equalPressCount = 0;
     let pStored = false;
     
-    // ----- TIMER POUR L'APPUI LONG -----
-    let longPressTimer = null;
+    // ----- TIMERS POUR LES APPUIS LONGS -----
+    let toggleSignLongPressTimer = null;
+    let zeroLongPressTimer = null;
     
     // ----- VARIABLES POUR LE DOUBLE APPUI SUR "." -----
     let dotClickCount = 0;
     let dotClickTimer = null;
+
+    // ----- FONCTION POUR RÉINITIALISER TOUTE LA CALCULATRICE -----
+    function resetCalculator() {
+      display.innerText = '0';
+      firstNumber = null;
+      operator = null;
+      waitingForSecondNumber = false;
+      
+      // Réinitialiser P et tout ce qui va avec
+      P = null;
+      apiData = null;
+      pStored = false;
+      equalPressCount = 0;
+      secretMode = true;  // Réactiver le mode secret
+      percentCycle = 0;
+      
+      // Mettre à jour l'interface
+      updateImageText();
+      updateACButton();
+      
+      console.log("🔄 Calculatrice réinitialisée");
+    }
 
     // ----- FONCTION POUR FORMATER UN NOMBRE EN 4 CHIFFRES -----
     function formatToFourDigits(num) {
@@ -390,7 +415,6 @@
 
     // ----- GESTIONNAIRE POUR LE BOUTON "." (DOUBLE APPUI) -----
     window.handleDotClick = function() {
-      // Si le mode secret est désactivé, comportement normal
       if (!secretMode) {
         performAppendDot();
         return;
@@ -405,17 +429,16 @@
       dotClickTimer = setTimeout(() => {
         dotClickCount = 0;
         dotClickTimer = null;
-      }, 300); // Délai plus court pour le double clic
+      }, 300);
       
       if (dotClickCount === 2) {
         showImage();
         dotClickCount = 0;
         clearTimeout(dotClickTimer);
         dotClickTimer = null;
-        return; // Ne pas ajouter de point
+        return;
       }
       
-      // Sinon, comportement normal du point (premier clic)
       performAppendDot();
     };
 
@@ -443,38 +466,56 @@
       updateACButton();
     }
 
-    // ----- FONCTION POUR DÉMARRER L'APPUI LONG (CYCLIQUE) -----
-    window.startLongPress = function() {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
+    // ----- GESTIONNAIRES POUR L'APPUI LONG SUR +/- -----
+    window.startToggleSignLongPress = function() {
+      if (toggleSignLongPressTimer) {
+        clearTimeout(toggleSignLongPressTimer);
       }
       
-      longPressTimer = setTimeout(() => {
-        // Bascule le mode secret
+      toggleSignLongPressTimer = setTimeout(() => {
         secretMode = !secretMode;
         percentCycle = 0;
         
-        if (secretMode) {
-          console.log("Mode secret ACTIVÉ (appui long)");
-        } else {
-          console.log("Mode secret DÉSACTIVÉ (appui long)");
-        }
+        console.log(secretMode ? "🔓 Mode secret ACTIVÉ" : "🔒 Mode secret DÉSACTIVÉ");
         
-        // Feedback visuel
         percentButton.style.filter = 'brightness(1.5)';
         setTimeout(() => {
           percentButton.style.filter = '';
         }, 200);
         
-        longPressTimer = null;
-      }, LONG_PRESS_DURATION);
+        toggleSignLongPressTimer = null;
+      }, TOGGLE_SIGN_LONG_PRESS);
     };
 
-    // ----- FONCTION POUR ANNULER L'APPUI LONG -----
-    window.cancelLongPress = function() {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
+    window.cancelToggleSignLongPress = function() {
+      if (toggleSignLongPressTimer) {
+        clearTimeout(toggleSignLongPressTimer);
+        toggleSignLongPressTimer = null;
+      }
+    };
+
+    // ----- GESTIONNAIRES POUR L'APPUI LONG SUR 0 -----
+    window.startZeroLongPress = function() {
+      if (zeroLongPressTimer) {
+        clearTimeout(zeroLongPressTimer);
+      }
+      
+      zeroLongPressTimer = setTimeout(() => {
+        resetCalculator();
+        
+        zeroButton.style.filter = 'brightness(1.5)';
+        setTimeout(() => {
+          zeroButton.style.filter = '';
+        }, 200);
+        
+        zeroLongPressTimer = null;
+      }, ZERO_LONG_PRESS);
+    };
+
+    window.cancelZeroLongPress = function() {
+      if (zeroLongPressTimer) {
+        clearTimeout(zeroLongPressTimer);
+        zeroLongPressTimer = null;
       }
     };
 
@@ -497,14 +538,14 @@
         
         if (data[code]) {
           apiData = data[code];
-          console.log("Données API pour", code, ":", apiData);
+          console.log("📡 Données API pour", code, ":", apiData);
           updateImageText();
         } else {
-          console.log("Code non trouvé:", code);
+          console.log("❌ Code non trouvé:", code);
           apiData = null;
         }
       } catch (error) {
-        console.error("Erreur API:", error);
+        console.error("⚠️ Erreur API:", error);
         apiData = null;
       }
     }
@@ -597,7 +638,6 @@
         waitingForSecondNumber = false;
         resetPercentCycle();
         hideImage();
-        // ✅ NE PAS toucher à pStored, equalPressCount, P, secretMode
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
@@ -696,13 +736,10 @@
     window.calculate = function() {
       if (!operator || waitingForSecondNumber) return;
 
-      // Incrémenter le compteur de =
       equalPressCount++;
       
-      // Récupérer le nombre affiché avant le calcul
       const currentNumberStr = display.innerText;
       
-      // Division secrète (prioritaire)
       if (secretMode && operator === '/' && P !== null && apiData !== null) {
         const secondNumber = parseFloat(currentNumberStr);
         if (hasFourOrMoreDigits(currentNumberStr)) {
@@ -724,7 +761,6 @@
         }
       }
       
-      // Calcul normal
       const secondNumber = parseFloat(currentNumberStr);
       const result = operate(operator, firstNumber, secondNumber);
 
@@ -737,7 +773,6 @@
         return;
       }
 
-      // Stockage de P
       if (!pStored && equalPressCount >= 3) {
         if (isValidForP(currentNumberStr)) {
           const num = parseInt(currentNumberStr, 10);
@@ -776,8 +811,8 @@
       }
     }
 
-    // ----- TOGGLE SIGN -----
-    window.toggleSign = function() {
+    // ----- TOGGLE SIGN (clic court) -----
+    window.handleToggleSign = function() {
       if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
       let val = parseFloat(display.innerText);
       if (isNaN(val)) return;
