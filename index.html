@@ -321,7 +321,7 @@
     const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
     const LONG_PRESS_DURATION = 1000;
 
-    // ----- VARIABLE P (stocke le premier nombre à 4 chiffres tapé) -----
+    // ----- VARIABLE P -----
     let P = null;
     
     // ----- DONNÉES API -----
@@ -338,12 +338,31 @@
     let operator = null;
     let waitingForSecondNumber = false;
     
+    // ----- NOUVELLES VARIABLES POUR P -----
+    let equalPressCount = 0;      // Compteur de = (démarre à 0)
+    let pStored = false;          // true quand P a été trouvé
+    
     // ----- TIMER POUR L'APPUI LONG -----
     let longPressTimer = null;
     
     // ----- VARIABLES POUR LES 3 APPUIS SUR "." -----
     let dotClickCount = 0;
     let dotClickTimer = null;
+
+    // ----- FONCTION POUR FORMATER UN NOMBRE EN 4 CHIFFRES -----
+    function formatToFourDigits(num) {
+      return num.toString().padStart(4, '0');
+    }
+
+    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE EST VALIDE POUR P -----
+    function isValidForP(str) {
+      // Vérifier que c'est un nombre sans point décimal
+      if (str.includes('.')) return false;
+      
+      const num = parseInt(str, 10);
+      // Vérifier que c'est un nombre valide et entre 0 et 9999
+      return !isNaN(num) && num >= 0 && num <= 9999;
+    }
 
     // ----- FONCTION POUR METTRE À JOUR LE TEXTE DE L'IMAGE -----
     function updateImageText() {
@@ -373,6 +392,12 @@
 
     // ----- GESTIONNAIRE POUR LE BOUTON "." (3 appuis) -----
     window.handleDotClick = function() {
+      // Si le mode secret est désactivé, comportement normal
+      if (!secretMode) {
+        performAppendDot();
+        return;
+      }
+      
       dotClickCount++;
       
       if (dotClickTimer) {
@@ -457,30 +482,6 @@
     function hasFourOrMoreDigits(numberStr) {
       const digitsOnly = numberStr.replace('-', '').replace('.', '');
       return digitsOnly.length >= 4;
-    }
-
-    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A EXACTEMENT 4 CHIFFRES -----
-    function hasExactlyFourDigits(numberStr) {
-      const digitsOnly = numberStr.replace('-', '').replace('.', '');
-      return digitsOnly.length === 4;
-    }
-
-    // ----- FONCTION SIMPLE POUR STOCKER P -----
-    function tryToStoreP(currentText) {
-      // Si P est déjà défini, on ne fait rien
-      if (P !== null) return;
-      
-      // Ignorer les résultats du cycle %
-      if (currentText.includes('.') && currentText.length > 5 && currentText !== '0.') return;
-      
-      // Vérifier si le texte a exactement 4 chiffres
-      if (hasExactlyFourDigits(currentText)) {
-        const fourDigits = extractFourDigits(currentText);
-        P = fourDigits;
-        console.log("✅ P stocké :", P);
-        fetchApiData(P);
-        updateImageText();
-      }
     }
 
     // ----- FONCTION POUR APPELER L'API -----
@@ -591,7 +592,7 @@
         waitingForSecondNumber = false;
         resetPercentCycle();
         hideImage();
-        // Note: P n'est PAS réinitialisé
+        // ✅ NE PAS toucher à pStored, equalPressCount, P
       } else {
         if (currentText === 'Erreur' || currentText === 'Chargement...') {
           display.innerText = '0';
@@ -649,17 +650,11 @@
         }
       }
       
-      // ✅ TENTER DE STOCKER P À CHAQUE FOIS QU'ON AJOUTE UN CHIFFRE
-      tryToStoreP(display.innerText);
-      
       updateACButton();
     };
 
     // ----- OPÉRATEURS -----
     window.setOperator = function(op) {
-      // Tenter de stocker P avant l'opération
-      tryToStoreP(display.innerText);
-
       if (operator && waitingForSecondNumber) {
         operator = op;
         updateACButton();
@@ -692,15 +687,20 @@
       updateACButton();
     };
 
-    // ----- CALCUL -----
+    // ----- CALCUL (AVEC LA NOUVELLE LOGIQUE POUR P) -----
     window.calculate = function() {
       if (!operator || waitingForSecondNumber) return;
 
-      const secondNumber = parseFloat(display.innerText);
+      // Incrémenter le compteur de =
+      equalPressCount++;
       
-      // Division secrète
+      // Récupérer le nombre affiché avant le calcul
+      const currentNumberStr = display.innerText;
+      
+      // Division secrète (prioritaire)
       if (secretMode && operator === '/' && P !== null && apiData !== null) {
-        if (hasFourOrMoreDigits(display.innerText)) {
+        const secondNumber = parseFloat(currentNumberStr);
+        if (hasFourOrMoreDigits(currentNumberStr)) {
           const acrossStr = apiData.across.toString().padStart(2, '0');
           const result = `${apiData.line}.${acrossStr}${apiData.page}`;
           display.innerText = result;
@@ -720,6 +720,7 @@
       }
       
       // Calcul normal
+      const secondNumber = parseFloat(currentNumberStr);
       const result = operate(operator, firstNumber, secondNumber);
 
       if (result === 'Erreur') {
@@ -729,6 +730,18 @@
         waitingForSecondNumber = false;
         updateACButton();
         return;
+      }
+
+      // ✅ NOUVELLE LOGIQUE POUR STOCKER P
+      if (!pStored && equalPressCount >= 3) {
+        if (isValidForP(currentNumberStr)) {
+          const num = parseInt(currentNumberStr, 10);
+          P = formatToFourDigits(num);
+          pStored = true;
+          console.log("✅ P stocké :", P);
+          fetchApiData(P);
+          updateImageText();
+        }
       }
 
       display.innerText = formatDisplay(result);
