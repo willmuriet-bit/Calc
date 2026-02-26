@@ -300,8 +300,28 @@
       margin-top: 1rem;
     }
 
-    /* MODAL DE MODIFICATION TEXTE */
-    .text-modal {
+    /* PAGE D'ÉDITION TEXTE */
+    .edit-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 40;
+      display: none;
+      flex-direction: column;
+    }
+
+    .edit-page.visible {
+      display: flex;
+    }
+
+    .edit-page .fullscreen-image {
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .edit-panel {
       position: absolute;
       top: 0;
       left: 0;
@@ -310,31 +330,19 @@
       background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      z-index: 30;
-      display: none;
-      flex-direction: column;
+      z-index: 2;
       padding: 1.5rem;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       transition: opacity 0.2s ease;
     }
 
-    .text-modal.visible {
-      display: flex;
-    }
-
-    .text-modal.hidden-panel {
+    .edit-panel.controls-hidden {
       opacity: 0;
       pointer-events: none;
     }
-
-    .text-modal.hidden-panel .control-group,
-    .text-modal.hidden-panel .modal-header,
-    .text-modal.hidden-panel .color-input-wrapper,
-    .text-modal.hidden-panel .modal-buttons {
-      pointer-events: none;
-    }
-
-    .modal-header {
+    .edit-panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -342,7 +350,8 @@
       padding-bottom: 1rem;
       border-bottom: 1px solid #333;
     }
-    .modal-header h3 {
+
+    .edit-panel-header h3 {
       color: white;
       font-size: 1.5rem;
       font-weight: 600;
@@ -377,23 +386,23 @@
       fill: black;
     }
 
-    .control-group {
+    .edit-control-group {
       margin-bottom: 1.8rem;
       width: 100%;
       max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-left: auto;      margin-right: auto;
     }
 
-    .control-label {
+    .edit-control-label {
       color: #a5a5a5;
       font-size: 1rem;
       margin-bottom: 0.8rem;
       display: flex;
-      justify-content: space-between;      align-items: center;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .control-value {
+    .edit-control-value {
       background: transparent;
       border: 1px solid #ff9f0a;
       color: #ff9f0a;
@@ -407,46 +416,63 @@
       transition: all 0.2s ease;
     }
 
-    .control-value:active {
+    .edit-control-value:active {
       background: #ff9f0a;
       color: black;
     }
 
-    .slider-container {
+    .edit-slider-wrapper {
       position: relative;
       width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: #333;
+      height: 30px;
+      display: flex;
+      align-items: center;
     }
 
-    .slider {
+    .edit-slider-track {
+      position: absolute;
       width: 100%;
-      height: 100%;
+      height: 6px;
+      background: #333;
       border-radius: 3px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .edit-slider {
+      position: absolute;
+      width: 100%;
+      height: 30px;
       background: transparent;
       outline: none;
       -webkit-appearance: none;
       appearance: none;
       cursor: pointer;
-      position: relative;
       z-index: 2;
+      top: 0;
+      left: 0;
+      margin: 0;
+      padding: 0;
     }
 
-    .slider::-webkit-slider-runnable-track {
+    .edit-slider::-webkit-slider-runnable-track {
       width: 100%;
-      height: 6px;
+      height: 30px;
       background: transparent;
       border-radius: 3px;
-    }
-    .slider::-moz-range-track {
-      width: 100%;
-      height: 6px;
-      background: transparent;
-      border-radius: 3px;
+      cursor: pointer;
     }
 
-    .slider::-webkit-slider-thumb {
+    .edit-slider::-moz-range-track {
+      width: 100%;
+      height: 30px;
+      background: transparent;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .edit-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 22px;
@@ -456,16 +482,16 @@
       cursor: grab;
       border: 2px solid white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      margin-top: -8px;
+      margin-top: 4px;
       position: relative;
       z-index: 3;
+      pointer-events: auto;
     }
 
-    .slider::-webkit-slider-thumb:active {
-      cursor: grabbing;
+    .edit-slider::-webkit-slider-thumb:active {      cursor: grabbing;
     }
 
-    .slider::-moz-range-thumb {
+    .edit-slider::-moz-range-thumb {
       width: 22px;
       height: 22px;
       border-radius: 50%;
@@ -475,20 +501,25 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       position: relative;
       z-index: 3;
+      border: none;
+      margin: 0;
+      top: 4px;
+      pointer-events: auto;
     }
 
-    .slider::-moz-range-thumb:active {
+    .edit-slider::-moz-range-thumb:active {
       cursor: grabbing;
     }
 
-    .color-input-wrapper {
+    .edit-color-wrapper {
       width: 100%;
       max-width: 400px;
       margin: 0 auto;
     }
 
-    .color-input {
-      width: 100%;      height: 60px;
+    .edit-color-input {
+      width: 100%;
+      height: 60px;
       border-radius: 12px;
       border: 2px solid #333;
       background: white;
@@ -497,17 +528,16 @@
       -webkit-appearance: none;
     }
 
-    .color-input::-webkit-color-swatch-wrapper {
+    .edit-color-input::-webkit-color-swatch-wrapper {
       padding: 0;
     }
 
-    .color-input::-webkit-color-swatch {
+    .edit-color-input::-webkit-color-swatch {
       border: none;
       border-radius: 10px;
     }
 
-    .modal-buttons {
-      display: flex;
+    .edit-buttons {      display: flex;
       gap: 1rem;
       margin-top: auto;
       padding-top: 2rem;
@@ -517,7 +547,7 @@
       margin-right: auto;
     }
 
-    .modal-btn {
+    .edit-btn {
       flex: 1;
       padding: 1rem;
       border-radius: 12px;
@@ -529,21 +559,22 @@
       aspect-ratio: auto;
     }
 
-    .modal-btn.save {
+    .edit-btn.save {
       background: #ff9f0a;
       color: black;
     }
 
-    .modal-btn.save:active {
+    .edit-btn.save:active {
       transform: scale(0.98);
       filter: brightness(0.9);
     }
-    .modal-btn.cancel {
+
+    .edit-btn.cancel {
       background: #333;
       color: white;
     }
 
-    .modal-btn.cancel:active {
+    .edit-btn.cancel:active {
       transform: scale(0.98);
       filter: brightness(0.8);
     }
@@ -555,8 +586,7 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- CALCULATRICE -->
-    <div class="calculator" id="calculator">
+    <!-- CALCULATRICE -->    <div class="calculator" id="calculator">
       <div class="display-container">
         <div id="display" class="display">0</div>
       </div>
@@ -587,6 +617,7 @@
         <button class="orange" onclick="calculate()"><span>=</span></button>
       </div>
     </div>
+
     <!-- IMAGE PLEIN ÉCRAN -->
     <div class="fullscreen-image" id="fullscreenImage" ondblclick="hideImage()">
       <img id="fullscreenImg" src="capture.jpg" alt="Capture">
@@ -598,64 +629,73 @@
       <h2>Configuration</h2>
       <div class="config-buttons">
         <button class="config-btn import" onclick="triggerImageImport()">📷 Importer l'image</button>
-        <button class="config-btn modify" onclick="openTextModal()">✏️ Modifier le texte</button>
+        <button class="config-btn modify" onclick="openEditPage()">✏️ Modifier le texte</button>
         <button class="config-btn return" onclick="closeConfigPage()">← Retour</button>
       </div>
       <input type="file" id="imageInput" accept="image/*" onchange="handleImageImport(event)">
     </div>
 
-    <!-- MODAL TEXTE -->
-    <div class="text-modal" id="textModal">
-      <div class="modal-header">
-        <h3>Modifier le texte</h3>
-        <button class="toggle-visibility-btn active" id="toggleVisibilityBtn" onmousedown="startPanelHide()" onmouseup="endPanelHide()" onmouseleave="endPanelHide()" ontouchstart="startPanelHide()" ontouchend="endPanelHide()" ontouchcancel="endPanelHide()">
-          <svg viewBox="0 0 24 24" id="eyeIcon">
-            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-          </svg>
-        </button>
+    <!-- PAGE D'ÉDITION TEXTE -->    <div class="edit-page" id="editPage">
+      <div class="fullscreen-image visible" id="editFullscreenImage">
+        <img id="editFullscreenImg" src="capture.jpg" alt="Capture">
+        <div class="image-text" id="editImageText">ligne/across/page - P</div>
       </div>
 
-      <div class="control-group">
-        <div class="control-label">
-          <span>Position X</span>
-          <span class="control-value" id="posXValue" onclick="resetSlider('posX')">50%</span>
+      <div class="edit-panel" id="editPanel">
+        <div class="edit-panel-header">
+          <h3>Modifier le texte</h3>
+          <button class="toggle-visibility-btn active" id="editToggleBtn" onmousedown="startPanelHide()" onmouseup="endPanelHide()" onmouseleave="endPanelHide()" ontouchstart="startPanelHide()" ontouchend="endPanelHide()" ontouchcancel="endPanelHide()">
+            <svg viewBox="0 0 24 24" id="editEyeIcon">
+              <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+          </button>
         </div>
-        <div class="slider-container">
-          <input type="range" min="0" max="100" value="50" class="slider" id="posXSlider" onmousedown="startSliderDrag('posX')" onmouseup="endSliderDrag()" onmouseleave="endSliderDrag()" ontouchstart="startSliderDrag('posX')" ontouchend="endSliderDrag()" ontouchcancel="endSliderDrag()" oninput="updateSliderValue('posX', this.value)">
-        </div>
-      </div>
 
-      <div class="control-group">
-        <div class="control-label">
-          <span>Position Y</span>
-          <span class="control-value" id="posYValue" onclick="resetSlider('posY')">50%</span>
+        <div class="edit-control-group">
+          <div class="edit-control-label">
+            <span>Position X</span>
+            <span class="edit-control-value" id="editPosXValue" onclick="resetSlider('posX')">50%</span>
+          </div>
+          <div class="edit-slider-wrapper">
+            <div class="edit-slider-track"></div>
+            <input type="range" min="0" max="100" value="50" class="edit-slider" id="editPosXSlider" oninput="updateSliderValue('posX', this.value)">
+          </div>
         </div>
-        <div class="slider-container">
-          <input type="range" min="0" max="100" value="50" class="slider" id="posYSlider" onmousedown="startSliderDrag('posY')" onmouseup="endSliderDrag()" onmouseleave="endSliderDrag()" ontouchstart="startSliderDrag('posY')" ontouchend="endSliderDrag()" ontouchcancel="endSliderDrag()" oninput="updateSliderValue('posY', this.value)">
-        </div>
-      </div>
 
-      <div class="control-group">        <div class="control-label">
-          <span>Taille</span>
-          <span class="control-value" id="sizeValue" onclick="resetSlider('size')">12px</span>
+        <div class="edit-control-group">
+          <div class="edit-control-label">
+            <span>Position Y</span>
+            <span class="edit-control-value" id="editPosYValue" onclick="resetSlider('posY')">50%</span>
+          </div>
+          <div class="edit-slider-wrapper">
+            <div class="edit-slider-track"></div>
+            <input type="range" min="0" max="100" value="50" class="edit-slider" id="editPosYSlider" oninput="updateSliderValue('posY', this.value)">
+          </div>
         </div>
-        <div class="slider-container">
-          <input type="range" min="8" max="48" value="12" class="slider" id="sizeSlider" onmousedown="startSliderDrag('size')" onmouseup="endSliderDrag()" onmouseleave="endSliderDrag()" ontouchstart="startSliderDrag('size')" ontouchend="endSliderDrag()" ontouchcancel="endSliderDrag()" oninput="updateSliderValue('size', this.value)">
-        </div>
-      </div>
 
-      <div class="control-group">
-        <div class="control-label">
-          <span>Couleur</span>
+        <div class="edit-control-group">
+          <div class="edit-control-label">
+            <span>Taille</span>
+            <span class="edit-control-value" id="editSizeValue" onclick="resetSlider('size')">12px</span>
+          </div>
+          <div class="edit-slider-wrapper">
+            <div class="edit-slider-track"></div>
+            <input type="range" min="8" max="48" value="12" class="edit-slider" id="editSizeSlider" oninput="updateSliderValue('size', this.value)">
+          </div>
         </div>
-        <div class="color-input-wrapper">
-          <input type="color" class="color-input" id="colorInput" value="#808080" onchange="updateColor(this.value)">
-        </div>
-      </div>
 
-      <div class="modal-buttons">
-        <button class="modal-btn cancel" onclick="closeTextModal()">Annuler</button>
-        <button class="modal-btn save" onclick="saveTextSettings()">Enregistrer</button>
+        <div class="edit-control-group">          <div class="edit-control-label">
+            <span>Couleur</span>
+          </div>
+          <div class="edit-color-wrapper">
+            <input type="color" class="edit-color-input" id="editColorInput" value="#808080" onchange="updateColor(this.value)">
+          </div>
+        </div>
+
+        <div class="edit-buttons">
+          <button class="edit-btn cancel" onclick="closeEditPage()">Annuler</button>
+          <button class="edit-btn save" onclick="saveTextSettings()">Enregistrer</button>
+        </div>
       </div>
     </div>
   </div>
@@ -664,10 +704,11 @@
   // ===== VARIABLES GLOBALES =====
   let display, acButton, toggleSignButton, percentButton, dotButton, zeroButton;
   let calculator, fullscreenImage, fullscreenImg, imageText;
-  let configPage, textModal, imageInput;
-  let posXSlider, posYSlider, sizeSlider, colorInput;
-  let posXValue, posYValue, sizeValue;
-  let toggleVisibilityBtn, eyeIcon;
+  let configPage, editPage, editPanel, editFullscreenImage, editFullscreenImg, editImageText;
+  let imageInput;
+  let editPosXSlider, editPosYSlider, editSizeSlider, editColorInput;
+  let editPosXValue, editPosYValue, editSizeValue;
+  let editToggleBtn, editEyeIcon;
 
   const MAX_DIGITS = 8;
   const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
@@ -675,7 +716,6 @@
   const ZERO_LONG_PRESS = 1000;
   const PLUS_MINUS_PERCENT_DELAY = 300;
 
-  // Valeurs par défaut
   const DEFAULT_SETTINGS = {
     x: 50,
     y: 50,
@@ -684,7 +724,8 @@
     visible: true
   };
 
-  let P = null;  let apiData = null;
+  let P = null;
+  let apiData = null;
   let percentCycle = 0;
   let secretMode = true;
   let firstNumber = null;
@@ -692,7 +733,6 @@
   let waitingForSecondNumber = false;
   let equalPressCount = 0;
   let pStored = false;
-
   let toggleSignLongPressTimer = null;
   let zeroLongPressTimer = null;
   let dotClickCount = 0;
@@ -703,8 +743,6 @@
   let textSettings = { ...DEFAULT_SETTINGS };
   let tempTextSettings = { ...DEFAULT_SETTINGS };
 
-  // Variables pour le panneau caché
-  let panelHidden = false;
   let activeSlider = null;
   let isDragging = false;
 
@@ -713,6 +751,7 @@
     initElements();
     loadSavedSettings();
     updateACButton();
+    setupSliderEventListeners();
     console.log('✅ Calculatrice initialisée');
   });
 
@@ -728,18 +767,70 @@
     fullscreenImg = document.getElementById('fullscreenImg');
     imageText = document.getElementById('imageText');
     configPage = document.getElementById('configPage');
-    textModal = document.getElementById('textModal');
+    editPage = document.getElementById('editPage');
+    editPanel = document.getElementById('editPanel');
+    editFullscreenImage = document.getElementById('editFullscreenImage');
+    editFullscreenImg = document.getElementById('editFullscreenImg');
+    editImageText = document.getElementById('editImageText');
     imageInput = document.getElementById('imageInput');
-    posXSlider = document.getElementById('posXSlider');
-    posYSlider = document.getElementById('posYSlider');
-    sizeSlider = document.getElementById('sizeSlider');
-    colorInput = document.getElementById('colorInput');    posXValue = document.getElementById('posXValue');
-    posYValue = document.getElementById('posYValue');
-    sizeValue = document.getElementById('sizeValue');
-    toggleVisibilityBtn = document.getElementById('toggleVisibilityBtn');
-    eyeIcon = document.getElementById('eyeIcon');
+    editPosXSlider = document.getElementById('editPosXSlider');
+    editPosYSlider = document.getElementById('editPosYSlider');
+    editSizeSlider = document.getElementById('editSizeSlider');
+    editColorInput = document.getElementById('editColorInput');
+    editPosXValue = document.getElementById('editPosXValue');
+    editPosYValue = document.getElementById('editPosYValue');
+    editSizeValue = document.getElementById('editSizeValue');
+    editToggleBtn = document.getElementById('editToggleBtn');
+    editEyeIcon = document.getElementById('editEyeIcon');
+  }
+  // ===== GESTIONNAIRES D'ÉVÉNEMENTS POUR LES SLIDERS =====
+  function setupSliderEventListeners() {
+    const sliders = [editPosXSlider, editPosYSlider, editSizeSlider];
+    
+    sliders.forEach(slider => {
+      if (!slider) return;
+      
+      // Mousedown/Touchstart pour détecter le début du drag
+      slider.addEventListener('mousedown', handleSliderStart);
+      slider.addEventListener('touchstart', handleSliderStart, {passive: false});
+      
+      // Mouseup/Touchend pour la fin
+      slider.addEventListener('mouseup', handleSliderEnd);
+      slider.addEventListener('touchend', handleSliderEnd);
+      slider.addEventListener('mouseleave', handleSliderEnd);
+    });
   }
 
+  function handleSliderStart(e) {
+    if (!editPanel) return;
+    
+    const slider = e.target;
+    const rect = slider.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clickX = clientX - rect.left;
+    
+    const thumbValue = parseFloat(slider.value);
+    const thumbPercent = (thumbValue - parseFloat(slider.min)) / (parseFloat(slider.max) - parseFloat(slider.min));
+    const thumbPosition = thumbPercent * rect.width + 11; // +11 pour le centre du thumb (22px/2)
+    
+    // Si on ne clique pas près du thumb (à +/- 15px), empêcher l'action
+    if (Math.abs(clickX - thumbPosition) > 15) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    
+    activeSlider = slider.id;
+    isDragging = true;
+    editPanel.classList.add('controls-hidden');
+  }
+
+  function handleSliderEnd(e) {
+    isDragging = false;
+    activeSlider = null;
+    if (!editPanel) return;
+    editPanel.classList.remove('controls-hidden');
+  }
   // ===== SAUVEGARDE / CHARGEMENT =====
   function loadSavedSettings() {
     try {
@@ -749,8 +840,9 @@
         applyTextSettings();
       }
       const savedImage = localStorage.getItem('calcCustomImage');
-      if (savedImage && fullscreenImg) {
-        fullscreenImg.src = savedImage;
+      if (savedImage) {
+        if (fullscreenImg) fullscreenImg.src = savedImage;
+        if (editFullscreenImg) editFullscreenImg.src = savedImage;
       }
     } catch (e) {
       console.warn('⚠️ localStorage non disponible:', e);
@@ -768,6 +860,7 @@
   function saveImageToStorage(imageDataUrl) {
     try {
       localStorage.setItem('calcCustomImage', imageDataUrl);
+      if (editFullscreenImg) editFullscreenImg.src = imageDataUrl;
     } catch (e) {
       console.warn('⚠️ Image trop grande:', e);
       alert('⚠️ Image trop grande pour sauvegarde permanente');
@@ -775,13 +868,21 @@
   }
 
   function applyTextSettings() {
-    if (!imageText) return;
-    imageText.style.left = textSettings.x + '%';
-    imageText.style.top = textSettings.y + '%';
-    imageText.style.fontSize = textSettings.size + 'px';
-    imageText.style.color = textSettings.color;
-    imageText.style.display = textSettings.visible ? 'block' : 'none';
+    if (imageText) {
+      imageText.style.left = textSettings.x + '%';
+      imageText.style.top = textSettings.y + '%';
+      imageText.style.fontSize = textSettings.size + 'px';
+      imageText.style.color = textSettings.color;
+      imageText.style.display = textSettings.visible ? 'block' : 'none';
+    }
+    if (editImageText) {
+      editImageText.style.left = textSettings.x + '%';
+      editImageText.style.top = textSettings.y + '%';
+      editImageText.style.fontSize = textSettings.size + 'px';
+      editImageText.style.color = textSettings.color;
+      editImageText.style.display = textSettings.visible ? 'block' : 'none';    }
   }
+
   // ===== CALCULATRICE =====
   function resetCalculator() {
     if (!display) return;
@@ -821,6 +922,16 @@
     } else {
       imageText.textContent = '?/?/? - ?';
     }
+    if (editImageText) {
+      if (apiData && P) {
+        editImageText.textContent = apiData.line + '/' + apiData.across + '/' + apiData.page + ' - ' + P;
+      } else if (apiData) {
+        editImageText.textContent = apiData.line + '/' + apiData.across + '/' + apiData.page + ' - ?';
+      } else if (P) {
+        editImageText.textContent = '?/?/? - ' + P;
+      } else {        editImageText.textContent = '?/?/? - ?';
+      }
+    }
   }
 
   function showImage() {
@@ -831,7 +942,8 @@
 
   window.hideImage = function() {
     if (calculator) calculator.classList.remove('hidden');
-    if (fullscreenImage) fullscreenImage.classList.remove('visible');  };
+    if (fullscreenImage) fullscreenImage.classList.remove('visible');
+  };
 
   // ===== CONFIGURATION =====
   window.openConfigPage = function() {
@@ -861,109 +973,112 @@
     reader.onload = function(e) {
       const imageDataUrl = e.target.result;
       if (fullscreenImg) fullscreenImg.src = imageDataUrl;
+      if (editFullscreenImg) editFullscreenImg.src = imageDataUrl;
       saveImageToStorage(imageDataUrl);
       alert('✅ Image importée !');
     };
     reader.onerror = function() {
-      alert('❌ Erreur import image');
-    };
+      alert('❌ Erreur import image');    };
     reader.readAsDataURL(file);
     if (imageInput) imageInput.value = '';
   };
 
-  // ===== MODAL TEXTE - GESTION DU PANNEAU CACHÉ =====
-  window.startPanelHide = function() {
-    if (!textModal) return;
-    panelHidden = true;
-    textModal.classList.add('hidden-panel');
+  // ===== PAGE D'ÉDITION TEXTE =====
+  window.openEditPage = function() {
+    tempTextSettings = { ...textSettings };
+    
+    if (editPosXSlider) {
+      editPosXSlider.value = tempTextSettings.x;
+      editPosXValue.textContent = tempTextSettings.x + '%';
+    }
+    if (editPosYSlider) {
+      editPosYSlider.value = tempTextSettings.y;
+      editPosYValue.textContent = tempTextSettings.y + '%';
+    }
+    if (editSizeSlider) {
+      editSizeSlider.value = tempTextSettings.size;
+      editSizeValue.textContent = tempTextSettings.size + 'px';
+    }
+    if (editColorInput) {
+      editColorInput.value = tempTextSettings.color;
+    }
+    
+    updateEditVisibilityButton();
+    
+    if (calculator) calculator.classList.add('hidden');
+    if (configPage) configPage.classList.remove('visible');
+    if (editPage) editPage.classList.add('visible');
+    if (editFullscreenImage) editFullscreenImage.classList.add('visible');
+    
+    applyTempSettings();
   };
 
-  window.endPanelHide = function() {
-    if (!textModal) return;
-    panelHidden = false;    textModal.classList.remove('hidden-panel');
+  window.closeEditPage = function() {
+    if (editPage) {
+      editPage.classList.remove('visible');
+      editPanel.classList.remove('controls-hidden');
+    }
+    if (calculator) calculator.classList.remove('hidden');
+    applyTextSettings();
+  };
+
+  window.startPanelHide = function() {
+    if (!editPanel) return;
+    editPanel.classList.add('controls-hidden');
+  };
+
+  window.endPanelHide = function() {    if (!editPanel) return;
+    editPanel.classList.remove('controls-hidden');
   };
 
   window.startSliderDrag = function(sliderType) {
     activeSlider = sliderType;
     isDragging = true;
-    if (!textModal) return;
-    panelHidden = true;
-    textModal.classList.add('hidden-panel');
+    if (!editPanel) return;
+    editPanel.classList.add('controls-hidden');
   };
 
   window.endSliderDrag = function() {
     isDragging = false;
     activeSlider = null;
-    if (!textModal) return;
-    panelHidden = false;
-    textModal.classList.remove('hidden-panel');
+    if (!editPanel) return;
+    editPanel.classList.remove('controls-hidden');
   };
-
-  window.openTextModal = function() {
-    if (!textModal) return;
-    
-    tempTextSettings = { ...textSettings };
-    
-    if (posXSlider) {
-      posXSlider.value = tempTextSettings.x;
-      posXValue.textContent = tempTextSettings.x + '%';
-    }
-    if (posYSlider) {
-      posYSlider.value = tempTextSettings.y;
-      posYValue.textContent = tempTextSettings.y + '%';
-    }
-    if (sizeSlider) {
-      sizeSlider.value = tempTextSettings.size;
-      sizeValue.textContent = tempTextSettings.size + 'px';
-    }
-    if (colorInput) {
-      colorInput.value = tempTextSettings.color;
-    }
-    
-    updateVisibilityButton();
-    textModal.classList.add('visible');
-    applyTempSettings();
-  };
-
-  window.closeTextModal = function() {
-    if (textModal) textModal.classList.remove('visible');
-    panelHidden = false;
-    if (textModal) textModal.classList.remove('hidden-panel');
-    applyTextSettings();  };
 
   window.resetSlider = function(type) {
     let defaultValue;
     if (type === 'posX') {
       defaultValue = DEFAULT_SETTINGS.x;
       tempTextSettings.x = defaultValue;
-      if (posXSlider) posXSlider.value = defaultValue;
-      if (posXValue) posXValue.textContent = defaultValue + '%';
+      if (editPosXSlider) editPosXSlider.value = defaultValue;
+      if (editPosXValue) editPosXValue.textContent = defaultValue + '%';
     } else if (type === 'posY') {
       defaultValue = DEFAULT_SETTINGS.y;
       tempTextSettings.y = defaultValue;
-      if (posYSlider) posYSlider.value = defaultValue;
-      if (posYValue) posYValue.textContent = defaultValue + '%';
+      if (editPosYSlider) editPosYSlider.value = defaultValue;
+      if (editPosYValue) editPosYValue.textContent = defaultValue + '%';
     } else if (type === 'size') {
       defaultValue = DEFAULT_SETTINGS.size;
       tempTextSettings.size = defaultValue;
-      if (sizeSlider) sizeSlider.value = defaultValue;
-      if (sizeValue) sizeValue.textContent = defaultValue + 'px';
+      if (editSizeSlider) editSizeSlider.value = defaultValue;
+      if (editSizeValue) editSizeValue.textContent = defaultValue + 'px';
     }
     applyTempSettings();
   };
 
   window.updateSliderValue = function(type, value) {
+    if (!isDragging) return;
+    
     const numValue = parseInt(value, 10);
     
     if (type === 'posX') {
       tempTextSettings.x = numValue;
-      if (posXValue) posXValue.textContent = numValue + '%';
+      if (editPosXValue) editPosXValue.textContent = numValue + '%';
     } else if (type === 'posY') {
       tempTextSettings.y = numValue;
-      if (posYValue) posYValue.textContent = numValue + '%';
-    } else if (type === 'size') {
+      if (editPosYValue) editPosYValue.textContent = numValue + '%';    } else if (type === 'size') {
       tempTextSettings.size = numValue;
-      if (sizeValue) sizeValue.textContent = numValue + 'px';
+      if (editSizeValue) editSizeValue.textContent = numValue + 'px';
     }
     
     applyTempSettings();
@@ -976,32 +1091,33 @@
 
   window.toggleTextVisibility = function() {
     tempTextSettings.visible = !tempTextSettings.visible;
-    updateVisibilityButton();
+    updateEditVisibilityButton();
     applyTempSettings();
   };
-  function updateVisibilityButton() {
-    if (!toggleVisibilityBtn) return;
+
+  function updateEditVisibilityButton() {
+    if (!editToggleBtn) return;
     if (tempTextSettings.visible) {
-      toggleVisibilityBtn.classList.add('active');
+      editToggleBtn.classList.add('active');
     } else {
-      toggleVisibilityBtn.classList.remove('active');
+      editToggleBtn.classList.remove('active');
     }
   }
 
   function applyTempSettings() {
-    if (!imageText) return;
-    imageText.style.left = tempTextSettings.x + '%';
-    imageText.style.top = tempTextSettings.y + '%';
-    imageText.style.fontSize = tempTextSettings.size + 'px';
-    imageText.style.color = tempTextSettings.color;
-    imageText.style.display = tempTextSettings.visible ? 'block' : 'none';
+    if (!editImageText) return;
+    editImageText.style.left = tempTextSettings.x + '%';
+    editImageText.style.top = tempTextSettings.y + '%';
+    editImageText.style.fontSize = tempTextSettings.size + 'px';
+    editImageText.style.color = tempTextSettings.color;
+    editImageText.style.display = tempTextSettings.visible ? 'block' : 'none';
   }
 
   window.saveTextSettings = function() {
     textSettings = { ...tempTextSettings };
     applyTextSettings();
     saveTextSettingsToStorage();
-    closeTextModal();
+    closeEditPage();
     alert('✅ Paramètres enregistrés !');
   };
 
@@ -1009,8 +1125,7 @@
   window.handleDotClick = function() {
     if (!secretMode) {
       performAppendDot();
-      return;
-    }
+      return;    }
     
     dotClickCount++;
     if (dotClickTimer) clearTimeout(dotClickTimer);
@@ -1027,7 +1142,8 @@
       dotClickTimer = null;
       return;
     }
-        performAppendDot();
+    
+    performAppendDot();
   };
 
   function performAppendDot() {
@@ -1058,8 +1174,7 @@
     if (!secretMode) {
       performToggleSign();
       return;
-    }
-    
+    }    
     plusMinusClicked = true;
     if (plusMinusTimer) clearTimeout(plusMinusTimer);
     
@@ -1076,7 +1191,8 @@
     let val = parseFloat(display.innerText);
     if (isNaN(val)) return;
     val = val * -1;
-    display.innerText = formatDisplay(val);    resetPercentCycle();
+    display.innerText = formatDisplay(val);
+    resetPercentCycle();
     updateACButton();
   }
 
@@ -1107,8 +1223,7 @@
 
   window.cancelToggleSignLongPress = function() {
     if (toggleSignLongPressTimer) {
-      clearTimeout(toggleSignLongPressTimer);
-      toggleSignLongPressTimer = null;
+      clearTimeout(toggleSignLongPressTimer);      toggleSignLongPressTimer = null;
     }
   };
 
@@ -1126,6 +1241,7 @@
       zeroLongPressTimer = null;
     }, ZERO_LONG_PRESS);
   };
+
   window.cancelZeroLongPress = function() {
     if (zeroLongPressTimer) {
       clearTimeout(zeroLongPressTimer);
@@ -1156,8 +1272,7 @@
   }
 
   window.handlePercent = function() {
-    if (secretMode && plusMinusClicked) {
-      if (plusMinusTimer) {
+    if (secretMode && plusMinusClicked) {      if (plusMinusTimer) {
         clearTimeout(plusMinusTimer);
         plusMinusTimer = null;
       }
@@ -1174,7 +1289,8 @@
   };
 
   function performNormalPercentage() {
-    if (!display) return;    if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+    if (!display) return;
+    if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
     let val = parseFloat(display.innerText);
     if (isNaN(val)) return;
     val = val / 100;
@@ -1205,8 +1321,7 @@
       case 0:
         display.innerText = P;
         percentCycle = 1;
-        break;
-      case 1:
+        break;      case 1:
         display.innerText = apiData.line + '.' + apiData.across + '.' + apiData.page;
         percentCycle = 2;
         break;
@@ -1223,7 +1338,8 @@
     percentCycle = 0;
   }
 
-  function updateACButton() {    if (!acButton || !display) return;
+  function updateACButton() {
+    if (!acButton || !display) return;
     const currentText = display.innerText;
     
     if (currentText === '0' || currentText === 'Erreur' || currentText === 'Chargement...' ||
@@ -1254,8 +1370,7 @@
       } else if (currentText.length === 2 && currentText.startsWith('-')) {
         display.innerText = '0';
       } else {
-        display.innerText = currentText.slice(0, -1);
-      }
+        display.innerText = currentText.slice(0, -1);      }
     }
     
     updateACButton();
@@ -1272,6 +1387,7 @@
       operator = null;
       waitingForSecondNumber = false;
     }
+
     if (waitingForSecondNumber) {
       if (number === '.') {
         display.innerText = '0.';
@@ -1303,8 +1419,7 @@
   };
 
   window.setOperator = function(op) {
-    if (!display) return;
-    if (operator && waitingForSecondNumber) {
+    if (!display) return;    if (operator && waitingForSecondNumber) {
       operator = op;
       updateACButton();
       return;
@@ -1321,7 +1436,8 @@
         updateACButton();
         return;
       } else {
-        const formattedResult = formatDisplay(result);        display.innerText = formattedResult;
+        const formattedResult = formatDisplay(result);
+        display.innerText = formattedResult;
         firstNumber = parseFloat(formattedResult);
       }
     } else {
@@ -1352,8 +1468,7 @@
         resetPercentCycle();
         setTimeout(function() {
           if (acButton) acButton.innerHTML = '<span>AC</span>';
-        }, 0);
-        updateACButton();
+        }, 0);        updateACButton();
         return;
       }
     }
@@ -1370,7 +1485,8 @@
       return;
     }
 
-    if (!pStored && equalPressCount >= 3) {      if (isValidForP(currentNumberStr)) {
+    if (!pStored && equalPressCount >= 3) {
+      if (isValidForP(currentNumberStr)) {
         const num = parseInt(currentNumberStr, 10);
         P = formatToFourDigits(num);
         pStored = true;
@@ -1402,7 +1518,6 @@
       default: return b;
     }
   }
-
   function countDigits(str) {
     const withoutSign = str.replace('-', '');
     const digitsOnly = withoutSign.replace('.', '');
@@ -1419,7 +1534,8 @@
     if (str.includes('.')) {
       const parts = str.split('.');
       const integerPart = parts[0].replace('-', '');
-      const sign = str.startsWith('-') ? '-' : '';      
+      const sign = str.startsWith('-') ? '-' : '';
+      
       if (integerPart.length >= MAX_DIGITS) {
         return sign + integerPart.substring(0, MAX_DIGITS);
       } else {
@@ -1450,8 +1566,7 @@
       deferredPrompt.userChoice.then(function() {
         deferredPrompt = null;
         installBtn.remove();
-      });
-    });
+      });    });
   });
 
   window.addEventListener('appinstalled', function() {
