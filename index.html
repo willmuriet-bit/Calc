@@ -236,6 +236,80 @@
       white-space: nowrap;
     }
 
+    /* MODAL D'APERÇU IMAGE */
+    .image-preview-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);      z-index: 100;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .image-preview-modal.visible {
+      display: flex;
+    }
+
+    .image-preview-frame {
+      width: 100%;
+      max-width: 350px;
+      aspect-ratio: 3/4;
+      border: 3px solid #ff9f0a;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      background: black;
+    }
+
+    .image-preview-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .image-preview-buttons {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .preview-btn {
+      flex: 1;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 15px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      aspect-ratio: auto;
+    }
+
+    .preview-btn.confirm {
+      background: #4CAF50;      color: white;
+    }
+
+    .preview-btn.confirm:active {
+      transform: scale(0.98);
+      filter: brightness(0.9);
+    }
+
+    .preview-btn.cancel {
+      background: #f44336;
+      color: white;
+    }
+
+    .preview-btn.cancel:active {
+      transform: scale(0.98);
+      filter: brightness(0.9);
+    }
+
     /* PAGE DE CONFIGURATION */
     .config-page {
       position: absolute;
@@ -243,7 +317,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: black;      z-index: 20;
+      background: black;
+      z-index: 20;
       display: none;
       flex-direction: column;
       justify-content: center;
@@ -266,8 +341,7 @@
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
-      width: 100%;
-      max-width: 300px;
+      width: 100%;      max-width: 300px;
     }
 
     .config-btn {
@@ -292,7 +366,8 @@
     }
 
     .config-btn.modify {
-      background: #333333;    }
+      background: #333333;
+    }
 
     .config-btn.return {
       background: #a5a5a5;
@@ -315,7 +390,6 @@
     .edit-page.visible {
       display: flex;
     }
-
     .edit-page .fullscreen-image {
       z-index: 1;
       pointer-events: none;
@@ -342,6 +416,7 @@
       opacity: 0;
       pointer-events: none;
     }
+
     .edit-panel-header {
       display: flex;
       justify-content: space-between;
@@ -364,8 +439,7 @@
       border-radius: 15px;
       background: transparent;
       cursor: pointer;
-      display: flex;
-      align-items: center;
+      display: flex;      align-items: center;
       justify-content: center;
       transition: all 0.3s ease;
       aspect-ratio: auto;
@@ -390,7 +464,8 @@
       margin-bottom: 1.8rem;
       width: 100%;
       max-width: 400px;
-      margin-left: auto;      margin-right: auto;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .edit-control-label {
@@ -410,11 +485,10 @@
       border-radius: 15px;
       font-size: 0.9rem;
       font-weight: 500;
-      min-width: 60px;
+      min-width: 70px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.2s ease;
-    }
+      transition: all 0.2s ease;    }
 
     .edit-control-value:active {
       background: #ff9f0a;
@@ -440,6 +514,7 @@
       pointer-events: none;
       z-index: 1;
     }
+
     .edit-slider {
       position: absolute;
       width: 100%;
@@ -463,7 +538,6 @@
       border-radius: 3px;
       cursor: pointer;
     }
-
     .edit-slider::-moz-range-track {
       width: 100%;
       height: 30px;
@@ -488,7 +562,8 @@
       pointer-events: auto;
     }
 
-    .edit-slider::-webkit-slider-thumb:active {      cursor: grabbing;
+    .edit-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
     }
 
     .edit-slider::-moz-range-thumb {
@@ -511,8 +586,7 @@
       cursor: grabbing;
     }
 
-    .edit-color-wrapper {
-      width: 100%;
+    .edit-color-wrapper {      width: 100%;
       max-width: 400px;
       margin: 0 auto;
     }
@@ -537,7 +611,8 @@
       border-radius: 10px;
     }
 
-    .edit-buttons {      display: flex;
+    .edit-buttons {
+      display: flex;
       gap: 1rem;
       margin-top: auto;
       padding-top: 2rem;
@@ -560,8 +635,7 @@
     }
 
     .edit-btn.save {
-      background: #ff9f0a;
-      color: black;
+      background: #ff9f0a;      color: black;
     }
 
     .edit-btn.save:active {
@@ -586,7 +660,8 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- CALCULATRICE -->    <div class="calculator" id="calculator">
+    <!-- CALCULATRICE -->
+    <div class="calculator" id="calculator">
       <div class="display-container">
         <div id="display" class="display">0</div>
       </div>
@@ -609,8 +684,7 @@
 
         <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
         <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
-        <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
-        <button class="orange" onclick="setOperator('+')"><span>+</span></button>
+        <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>        <button class="orange" onclick="setOperator('+')"><span>+</span></button>
 
         <button class="dark-gray btn-zero" id="zeroButton" onclick="appendNumber('0')" onmousedown="startZeroLongPress()" onmouseup="cancelZeroLongPress()" onmouseleave="cancelZeroLongPress()" ontouchstart="startZeroLongPress()" ontouchend="cancelZeroLongPress()" ontouchcancel="cancelZeroLongPress()"><span>0</span></button>
         <button class="dark-gray" id="dotButton" onclick="handleDotClick()"><span>.</span></button>
@@ -624,6 +698,17 @@
       <div class="image-text" id="imageText">ligne/across/page - P</div>
     </div>
 
+    <!-- MODAL D'APERÇU IMAGE -->
+    <div class="image-preview-modal" id="imagePreviewModal">
+      <div class="image-preview-frame">
+        <img id="previewImage" src="" alt="Aperçu">
+      </div>
+      <div class="image-preview-buttons">
+        <button class="preview-btn confirm" onclick="confirmImageImport()">Confirmer</button>
+        <button class="preview-btn cancel" onclick="cancelImageImport()">Annuler</button>
+      </div>
+    </div>
+
     <!-- PAGE CONFIGURATION -->
     <div class="config-page" id="configPage">
       <h2>Configuration</h2>
@@ -632,10 +717,11 @@
         <button class="config-btn modify" onclick="openEditPage()">✏️ Modifier le texte</button>
         <button class="config-btn return" onclick="closeConfigPage()">← Retour</button>
       </div>
-      <input type="file" id="imageInput" accept="image/*" onchange="handleImageImport(event)">
+      <input type="file" id="imageInput" accept="image/*" onchange="handleImagePreview(event)">
     </div>
 
-    <!-- PAGE D'ÉDITION TEXTE -->    <div class="edit-page" id="editPage">
+    <!-- PAGE D'ÉDITION TEXTE -->
+    <div class="edit-page" id="editPage">
       <div class="fullscreen-image visible" id="editFullscreenImage">
         <img id="editFullscreenImg" src="capture.jpg" alt="Capture">
         <div class="image-text" id="editImageText">ligne/across/page - P</div>
@@ -647,29 +733,28 @@
           <button class="toggle-visibility-btn active" id="editToggleBtn" onmousedown="startPanelHide()" onmouseup="endPanelHide()" onmouseleave="endPanelHide()" ontouchstart="startPanelHide()" ontouchend="endPanelHide()" ontouchcancel="endPanelHide()">
             <svg viewBox="0 0 24 24" id="editEyeIcon">
               <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-            </svg>
-          </button>
+            </svg>          </button>
         </div>
 
         <div class="edit-control-group">
           <div class="edit-control-label">
             <span>Position X</span>
-            <span class="edit-control-value" id="editPosXValue" onclick="resetSlider('posX')">50%</span>
+            <span class="edit-control-value" id="editPosXValue" onclick="resetSlider('posX')">50.0%</span>
           </div>
           <div class="edit-slider-wrapper">
             <div class="edit-slider-track"></div>
-            <input type="range" min="0" max="100" value="50" class="edit-slider" id="editPosXSlider" oninput="updateSliderValue('posX', this.value)">
+            <input type="range" min="0" max="100" step="0.1" value="50" class="edit-slider" id="editPosXSlider">
           </div>
         </div>
 
         <div class="edit-control-group">
           <div class="edit-control-label">
             <span>Position Y</span>
-            <span class="edit-control-value" id="editPosYValue" onclick="resetSlider('posY')">50%</span>
+            <span class="edit-control-value" id="editPosYValue" onclick="resetSlider('posY')">50.0%</span>
           </div>
           <div class="edit-slider-wrapper">
             <div class="edit-slider-track"></div>
-            <input type="range" min="0" max="100" value="50" class="edit-slider" id="editPosYSlider" oninput="updateSliderValue('posY', this.value)">
+            <input type="range" min="0" max="100" step="0.1" value="50" class="edit-slider" id="editPosYSlider">
           </div>
         </div>
 
@@ -680,11 +765,12 @@
           </div>
           <div class="edit-slider-wrapper">
             <div class="edit-slider-track"></div>
-            <input type="range" min="8" max="48" value="12" class="edit-slider" id="editSizeSlider" oninput="updateSliderValue('size', this.value)">
+            <input type="range" min="8" max="48" value="12" class="edit-slider" id="editSizeSlider">
           </div>
         </div>
 
-        <div class="edit-control-group">          <div class="edit-control-label">
+        <div class="edit-control-group">
+          <div class="edit-control-label">
             <span>Couleur</span>
           </div>
           <div class="edit-color-wrapper">
@@ -696,8 +782,7 @@
           <button class="edit-btn cancel" onclick="closeEditPage()">Annuler</button>
           <button class="edit-btn save" onclick="saveTextSettings()">Enregistrer</button>
         </div>
-      </div>
-    </div>
+      </div>    </div>
   </div>
 
 <script>
@@ -705,10 +790,12 @@
   let display, acButton, toggleSignButton, percentButton, dotButton, zeroButton;
   let calculator, fullscreenImage, fullscreenImg, imageText;
   let configPage, editPage, editPanel, editFullscreenImage, editFullscreenImg, editImageText;
-  let imageInput;
+  let imagePreviewModal, previewImage, imageInput;
   let editPosXSlider, editPosYSlider, editSizeSlider, editColorInput;
   let editPosXValue, editPosYValue, editSizeValue;
   let editToggleBtn, editEyeIcon;
+
+  let pendingImageData = null;
 
   const MAX_DIGITS = 8;
   const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
@@ -733,6 +820,7 @@
   let waitingForSecondNumber = false;
   let equalPressCount = 0;
   let pStored = false;
+
   let toggleSignLongPressTimer = null;
   let zeroLongPressTimer = null;
   let dotClickCount = 0;
@@ -743,8 +831,7 @@
   let textSettings = { ...DEFAULT_SETTINGS };
   let tempTextSettings = { ...DEFAULT_SETTINGS };
 
-  let activeSlider = null;
-  let isDragging = false;
+  let activeSlider = null;  let isDragging = false;
 
   // ===== INITIALISATION =====
   document.addEventListener('DOMContentLoaded', function() {
@@ -772,6 +859,8 @@
     editFullscreenImage = document.getElementById('editFullscreenImage');
     editFullscreenImg = document.getElementById('editFullscreenImg');
     editImageText = document.getElementById('editImageText');
+    imagePreviewModal = document.getElementById('imagePreviewModal');
+    previewImage = document.getElementById('previewImage');
     imageInput = document.getElementById('imageInput');
     editPosXSlider = document.getElementById('editPosXSlider');
     editPosYSlider = document.getElementById('editPosYSlider');
@@ -783,54 +872,94 @@
     editToggleBtn = document.getElementById('editToggleBtn');
     editEyeIcon = document.getElementById('editEyeIcon');
   }
+
   // ===== GESTIONNAIRES D'ÉVÉNEMENTS POUR LES SLIDERS =====
   function setupSliderEventListeners() {
-    const sliders = [editPosXSlider, editPosYSlider, editSizeSlider];
-    
-    sliders.forEach(slider => {
+    const sliders = [
+      { slider: editPosXSlider, valueEl: editPosXValue, type: 'posX' },
+      { slider: editPosYSlider, valueEl: editPosYValue, type: 'posY' },
+      { slider: editSizeSlider, valueEl: editSizeValue, type: 'size' }
+    ];
+        sliders.forEach(({ slider, valueEl, type }) => {
       if (!slider) return;
       
-      // Mousedown/Touchstart pour détecter le début du drag
-      slider.addEventListener('mousedown', handleSliderStart);
-      slider.addEventListener('touchstart', handleSliderStart, {passive: false});
+      slider.addEventListener('mousedown', function(e) {
+        const rect = slider.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        
+        const thumbValue = parseFloat(slider.value);
+        const thumbPercent = (thumbValue - parseFloat(slider.min)) / (parseFloat(slider.max) - parseFloat(slider.min));
+        const thumbPosition = thumbPercent * rect.width + 11;
+        
+        if (Math.abs(clickX - thumbPosition) > 15) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        
+        activeSlider = type;
+        isDragging = true;
+        if (editPanel) editPanel.classList.add('controls-hidden');
+      });
       
-      // Mouseup/Touchend pour la fin
-      slider.addEventListener('mouseup', handleSliderEnd);
-      slider.addEventListener('touchend', handleSliderEnd);
-      slider.addEventListener('mouseleave', handleSliderEnd);
+      slider.addEventListener('touchstart', function(e) {
+        const rect = slider.getBoundingClientRect();
+        const clientX = e.touches[0].clientX;
+        const clickX = clientX - rect.left;
+        
+        const thumbValue = parseFloat(slider.value);
+        const thumbPercent = (thumbValue - parseFloat(slider.min)) / (parseFloat(slider.max) - parseFloat(slider.min));
+        const thumbPosition = thumbPercent * rect.width + 11;
+        
+        if (Math.abs(clickX - thumbPosition) > 15) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        
+        activeSlider = type;
+        isDragging = true;
+        if (editPanel) editPanel.classList.add('controls-hidden');
+      }, {passive: false});
+      
+      slider.addEventListener('mouseup', function() {
+        isDragging = false;
+        activeSlider = null;
+        if (editPanel) editPanel.classList.remove('controls-hidden');
+      });
+      
+      slider.addEventListener('mouseleave', function() {
+        isDragging = false;        activeSlider = null;
+        if (editPanel) editPanel.classList.remove('controls-hidden');
+      });
+      
+      slider.addEventListener('touchend', function() {
+        isDragging = false;
+        activeSlider = null;
+        if (editPanel) editPanel.classList.remove('controls-hidden');
+      });
+      
+      slider.addEventListener('input', function() {
+        if (!isDragging) return;
+        
+        const numValue = parseFloat(slider.value);
+        
+        if (type === 'posX') {
+          tempTextSettings.x = numValue;
+          if (valueEl) valueEl.textContent = numValue.toFixed(1) + '%';
+        } else if (type === 'posY') {
+          tempTextSettings.y = numValue;
+          if (valueEl) valueEl.textContent = numValue.toFixed(1) + '%';
+        } else if (type === 'size') {
+          tempTextSettings.size = numValue;
+          if (valueEl) valueEl.textContent = numValue + 'px';
+        }
+        
+        applyTempSettings();
+      });
     });
   }
 
-  function handleSliderStart(e) {
-    if (!editPanel) return;
-    
-    const slider = e.target;
-    const rect = slider.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clickX = clientX - rect.left;
-    
-    const thumbValue = parseFloat(slider.value);
-    const thumbPercent = (thumbValue - parseFloat(slider.min)) / (parseFloat(slider.max) - parseFloat(slider.min));
-    const thumbPosition = thumbPercent * rect.width + 11; // +11 pour le centre du thumb (22px/2)
-    
-    // Si on ne clique pas près du thumb (à +/- 15px), empêcher l'action
-    if (Math.abs(clickX - thumbPosition) > 15) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-    
-    activeSlider = slider.id;
-    isDragging = true;
-    editPanel.classList.add('controls-hidden');
-  }
-
-  function handleSliderEnd(e) {
-    isDragging = false;
-    activeSlider = null;
-    if (!editPanel) return;
-    editPanel.classList.remove('controls-hidden');
-  }
   // ===== SAUVEGARDE / CHARGEMENT =====
   function loadSavedSettings() {
     try {
@@ -849,8 +978,7 @@
     }
   }
 
-  function saveTextSettingsToStorage() {
-    try {
+  function saveTextSettingsToStorage() {    try {
       localStorage.setItem('calcTextSettings', JSON.stringify(textSettings));
     } catch (e) {
       console.warn('⚠️ Impossible de sauvegarder:', e);
@@ -880,7 +1008,8 @@
       editImageText.style.top = textSettings.y + '%';
       editImageText.style.fontSize = textSettings.size + 'px';
       editImageText.style.color = textSettings.color;
-      editImageText.style.display = textSettings.visible ? 'block' : 'none';    }
+      editImageText.style.display = textSettings.visible ? 'block' : 'none';
+    }
   }
 
   // ===== CALCULATRICE =====
@@ -898,8 +1027,7 @@
     percentCycle = 0;
     updateImageText();
     updateACButton();
-    console.log('🔄 Réinitialisé');
-  }
+    console.log('🔄 Réinitialisé');  }
 
   function formatToFourDigits(num) {
     return num.toString().padStart(4, '0');
@@ -929,7 +1057,8 @@
         editImageText.textContent = apiData.line + '/' + apiData.across + '/' + apiData.page + ' - ?';
       } else if (P) {
         editImageText.textContent = '?/?/? - ' + P;
-      } else {        editImageText.textContent = '?/?/? - ?';
+      } else {
+        editImageText.textContent = '?/?/? - ?';
       }
     }
   }
@@ -945,13 +1074,58 @@
     if (fullscreenImage) fullscreenImage.classList.remove('visible');
   };
 
+  // ===== APERÇU IMAGE =====
+  window.triggerImageImport = function() {
+    if (imageInput) imageInput.click();  };
+
+  window.handleImagePreview = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      pendingImageData = e.target.result;
+      if (previewImage) {
+        previewImage.src = pendingImageData;
+      }
+      if (imagePreviewModal) {
+        imagePreviewModal.classList.add('visible');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.confirmImageImport = function() {
+    if (pendingImageData) {
+      if (fullscreenImg) fullscreenImg.src = pendingImageData;
+      if (editFullscreenImg) editFullscreenImg.src = pendingImageData;
+      saveImageToStorage(pendingImageData);
+      pendingImageData = null;
+    }
+    if (imagePreviewModal) {
+      imagePreviewModal.classList.remove('visible');
+    }
+    if (imageInput) {
+      imageInput.value = '';
+    }
+  };
+
+  window.cancelImageImport = function() {
+    pendingImageData = null;
+    if (imagePreviewModal) {
+      imagePreviewModal.classList.remove('visible');
+    }
+    if (imageInput) {
+      imageInput.value = '';
+    }
+  };
+
   // ===== CONFIGURATION =====
   window.openConfigPage = function() {
     if (calculator) calculator.classList.add('hidden');
     if (configPage) configPage.classList.add('visible');
     plusMinusClicked = false;
-    if (plusMinusTimer) {
-      clearTimeout(plusMinusTimer);
+    if (plusMinusTimer) {      clearTimeout(plusMinusTimer);
       plusMinusTimer = null;
     }
   };
@@ -961,39 +1135,17 @@
     if (calculator) calculator.classList.remove('hidden');
   };
 
-  window.triggerImageImport = function() {
-    if (imageInput) imageInput.click();
-  };
-
-  window.handleImageImport = function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const imageDataUrl = e.target.result;
-      if (fullscreenImg) fullscreenImg.src = imageDataUrl;
-      if (editFullscreenImg) editFullscreenImg.src = imageDataUrl;
-      saveImageToStorage(imageDataUrl);
-      alert('✅ Image importée !');
-    };
-    reader.onerror = function() {
-      alert('❌ Erreur import image');    };
-    reader.readAsDataURL(file);
-    if (imageInput) imageInput.value = '';
-  };
-
   // ===== PAGE D'ÉDITION TEXTE =====
   window.openEditPage = function() {
     tempTextSettings = { ...textSettings };
     
     if (editPosXSlider) {
       editPosXSlider.value = tempTextSettings.x;
-      editPosXValue.textContent = tempTextSettings.x + '%';
+      editPosXValue.textContent = parseFloat(tempTextSettings.x).toFixed(1) + '%';
     }
     if (editPosYSlider) {
       editPosYSlider.value = tempTextSettings.y;
-      editPosYValue.textContent = tempTextSettings.y + '%';
+      editPosYValue.textContent = parseFloat(tempTextSettings.y).toFixed(1) + '%';
     }
     if (editSizeSlider) {
       editSizeSlider.value = tempTextSettings.size;
@@ -1022,25 +1174,11 @@
     applyTextSettings();
   };
 
-  window.startPanelHide = function() {
-    if (!editPanel) return;
+  window.startPanelHide = function() {    if (!editPanel) return;
     editPanel.classList.add('controls-hidden');
   };
 
-  window.endPanelHide = function() {    if (!editPanel) return;
-    editPanel.classList.remove('controls-hidden');
-  };
-
-  window.startSliderDrag = function(sliderType) {
-    activeSlider = sliderType;
-    isDragging = true;
-    if (!editPanel) return;
-    editPanel.classList.add('controls-hidden');
-  };
-
-  window.endSliderDrag = function() {
-    isDragging = false;
-    activeSlider = null;
+  window.endPanelHide = function() {
     if (!editPanel) return;
     editPanel.classList.remove('controls-hidden');
   };
@@ -1051,36 +1189,18 @@
       defaultValue = DEFAULT_SETTINGS.x;
       tempTextSettings.x = defaultValue;
       if (editPosXSlider) editPosXSlider.value = defaultValue;
-      if (editPosXValue) editPosXValue.textContent = defaultValue + '%';
+      if (editPosXValue) editPosXValue.textContent = parseFloat(defaultValue).toFixed(1) + '%';
     } else if (type === 'posY') {
       defaultValue = DEFAULT_SETTINGS.y;
       tempTextSettings.y = defaultValue;
       if (editPosYSlider) editPosYSlider.value = defaultValue;
-      if (editPosYValue) editPosYValue.textContent = defaultValue + '%';
+      if (editPosYValue) editPosYValue.textContent = parseFloat(defaultValue).toFixed(1) + '%';
     } else if (type === 'size') {
       defaultValue = DEFAULT_SETTINGS.size;
       tempTextSettings.size = defaultValue;
       if (editSizeSlider) editSizeSlider.value = defaultValue;
       if (editSizeValue) editSizeValue.textContent = defaultValue + 'px';
     }
-    applyTempSettings();
-  };
-
-  window.updateSliderValue = function(type, value) {
-    if (!isDragging) return;
-    
-    const numValue = parseInt(value, 10);
-    
-    if (type === 'posX') {
-      tempTextSettings.x = numValue;
-      if (editPosXValue) editPosXValue.textContent = numValue + '%';
-    } else if (type === 'posY') {
-      tempTextSettings.y = numValue;
-      if (editPosYValue) editPosYValue.textContent = numValue + '%';    } else if (type === 'size') {
-      tempTextSettings.size = numValue;
-      if (editSizeValue) editSizeValue.textContent = numValue + 'px';
-    }
-    
     applyTempSettings();
   };
 
@@ -1103,7 +1223,6 @@
       editToggleBtn.classList.remove('active');
     }
   }
-
   function applyTempSettings() {
     if (!editImageText) return;
     editImageText.style.left = tempTextSettings.x + '%';
@@ -1125,7 +1244,8 @@
   window.handleDotClick = function() {
     if (!secretMode) {
       performAppendDot();
-      return;    }
+      return;
+    }
     
     dotClickCount++;
     if (dotClickTimer) clearTimeout(dotClickTimer);
@@ -1152,8 +1272,7 @@
     
     if (currentText === 'Erreur' || currentText === 'Chargement...') {
       display.innerText = '0';
-      currentText = '0';
-      firstNumber = null;
+      currentText = '0';      firstNumber = null;
       operator = null;
       waitingForSecondNumber = false;
     }
@@ -1174,7 +1293,8 @@
     if (!secretMode) {
       performToggleSign();
       return;
-    }    
+    }
+    
     plusMinusClicked = true;
     if (plusMinusTimer) clearTimeout(plusMinusTimer);
     
@@ -1201,8 +1321,7 @@
     
     toggleSignLongPressTimer = setTimeout(function() {
       secretMode = !secretMode;
-      percentCycle = 0;
-      plusMinusClicked = false;
+      percentCycle = 0;      plusMinusClicked = false;
       if (plusMinusTimer) {
         clearTimeout(plusMinusTimer);
         plusMinusTimer = null;
@@ -1223,7 +1342,8 @@
 
   window.cancelToggleSignLongPress = function() {
     if (toggleSignLongPressTimer) {
-      clearTimeout(toggleSignLongPressTimer);      toggleSignLongPressTimer = null;
+      clearTimeout(toggleSignLongPressTimer);
+      toggleSignLongPressTimer = null;
     }
   };
 
@@ -1250,8 +1370,7 @@
   };
 
   function hasFourOrMoreDigits(numberStr) {
-    const digitsOnly = numberStr.replace('-', '').replace('.', '');
-    return digitsOnly.length >= 4;
+    const digitsOnly = numberStr.replace('-', '').replace('.', '');    return digitsOnly.length >= 4;
   }
 
   async function fetchApiData(code) {
@@ -1272,7 +1391,8 @@
   }
 
   window.handlePercent = function() {
-    if (secretMode && plusMinusClicked) {      if (plusMinusTimer) {
+    if (secretMode && plusMinusClicked) {
+      if (plusMinusTimer) {
         clearTimeout(plusMinusTimer);
         plusMinusTimer = null;
       }
@@ -1299,8 +1419,7 @@
   }
 
   function performSecretPercent() {
-    setTimeout(function() {
-      if (acButton) acButton.innerHTML = '<span>AC</span>';
+    setTimeout(function() {      if (acButton) acButton.innerHTML = '<span>AC</span>';
     }, 0);
     
     if (P === null) {
@@ -1321,7 +1440,8 @@
       case 0:
         display.innerText = P;
         percentCycle = 1;
-        break;      case 1:
+        break;
+      case 1:
         display.innerText = apiData.line + '.' + apiData.across + '.' + apiData.page;
         percentCycle = 2;
         break;
@@ -1349,7 +1469,6 @@
       acButton.innerHTML = '<span>C</span>';
     }
   }
-
   window.handleACorC = function() {
     if (!display || !acButton) return;
     const currentText = display.innerText;
@@ -1370,7 +1489,8 @@
       } else if (currentText.length === 2 && currentText.startsWith('-')) {
         display.innerText = '0';
       } else {
-        display.innerText = currentText.slice(0, -1);      }
+        display.innerText = currentText.slice(0, -1);
+      }
     }
     
     updateACButton();
@@ -1397,8 +1517,7 @@
       waitingForSecondNumber = false;
       resetPercentCycle();
     } else {
-      let newText = currentText;
-      
+      let newText = currentText;      
       if (number === '.') {
         if (currentText.includes('.')) return;
         newText = currentText + '.';
@@ -1419,7 +1538,8 @@
   };
 
   window.setOperator = function(op) {
-    if (!display) return;    if (operator && waitingForSecondNumber) {
+    if (!display) return;
+    if (operator && waitingForSecondNumber) {
       operator = op;
       updateACButton();
       return;
@@ -1446,8 +1566,7 @@
 
     operator = op;
     waitingForSecondNumber = true;
-    display.innerText = '0';
-    resetPercentCycle();
+    display.innerText = '0';    resetPercentCycle();
     updateACButton();
   };
 
@@ -1468,7 +1587,8 @@
         resetPercentCycle();
         setTimeout(function() {
           if (acButton) acButton.innerHTML = '<span>AC</span>';
-        }, 0);        updateACButton();
+        }, 0);
+        updateACButton();
         return;
       }
     }
@@ -1495,7 +1615,6 @@
         updateImageText();
       }
     }
-
     display.innerText = formatDisplay(result);
     firstNumber = parseFloat(display.innerText);
     operator = null;
@@ -1518,6 +1637,7 @@
       default: return b;
     }
   }
+
   function countDigits(str) {
     const withoutSign = str.replace('-', '');
     const digitsOnly = withoutSign.replace('.', '');
@@ -1544,8 +1664,7 @@
         return sign + integerPart + '.' + decimalPart;
       }
     } else {
-      const sign = str.startsWith('-') ? '-' : '';
-      const absStr = str.replace('-', '');
+      const sign = str.startsWith('-') ? '-' : '';      const absStr = str.replace('-', '');
       return sign + absStr.substring(0, MAX_DIGITS);
     }
   }
@@ -1566,7 +1685,8 @@
       deferredPrompt.userChoice.then(function() {
         deferredPrompt = null;
         installBtn.remove();
-      });    });
+      });
+    });
   });
 
   window.addEventListener('appinstalled', function() {
