@@ -2,18 +2,22 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Calculatrice · PWA</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
-    /* RESET & STRUCTURE - ABSOLUMENT AUCUN DÉFILEMENT */
     * {
       box-sizing: border-box;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       margin: 0;
       padding: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
 
     html, body {
@@ -36,7 +40,6 @@
       align-items: center;
     }
 
-    /* CONTENEUR PRINCIPAL */
     .app-container {
       position: relative;
       width: 100%;
@@ -45,8 +48,6 @@
       max-height: 900px;
       margin: 0 auto;
     }
-
-    /* INTERFACE CALCULATRICE (visible par défaut) */
     .calculator {
       position: absolute;
       top: 0;
@@ -66,7 +67,6 @@
       pointer-events: none;
     }
 
-    /* IMAGE PLEIN ÉCRAN (cachée par défaut) */
     .fullscreen-image {
       position: absolute;
       top: 0;
@@ -77,6 +77,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
       pointer-events: none;
+      background: black;
     }
 
     .fullscreen-image.visible {
@@ -90,22 +91,16 @@
       object-fit: cover;
     }
 
-    /* TEXTE PAR-DESSUS L'IMAGE */
     .image-text {
       position: absolute;
       color: #808080;
       font-size: 12px;
       font-weight: bold;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-      z-index: 6;
-      top: 348px;
-      left: 287px;
-      transform: translate(-50%, -50%);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);      z-index: 6;
       white-space: nowrap;
       pointer-events: none;
     }
 
-    /* ÉCRAN */
     .display-container {
       width: 100%;
       flex: 1;
@@ -141,7 +136,6 @@
       height: 0;
     }
 
-    /* GRILLE BOUTONS */
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -151,7 +145,6 @@
       background: black;
       flex-shrink: 0;
     }
-
     button {
       width: 100%;
       aspect-ratio: 1 / 1;
@@ -169,11 +162,13 @@
       padding: 0;
       box-shadow: none;
       outline: none;
+      -webkit-appearance: none;
     }
 
     button span {
       display: block;
       line-height: 1;
+      pointer-events: none;
     }
 
     .btn-zero {
@@ -200,7 +195,6 @@
     button:active {
       filter: brightness(1.4);
     }
-
     @media (min-width: 460px) {
       .buttons {
         gap: 0.9rem;
@@ -212,10 +206,6 @@
       .btn-zero {
         padding-left: 2.2rem;
       }
-      .image-text {
-        top: 348px;
-        left: 287px;
-      }
     }
 
     @media (max-width: 340px) {
@@ -225,14 +215,8 @@
       .display {
         font-size: clamp(3.2rem, 15vw, 5rem);
       }
-      .image-text {
-        font-size: 10px;
-        top: 300px;
-        left: 240px;
-      }
     }
 
-    /* bouton pour installer la PWA */
     .install-btn {
       position: fixed;
       top: 12px;
@@ -251,519 +235,1084 @@
       transition: opacity 0.2s;
       white-space: nowrap;
     }
-    .install-btn:hover {
-      opacity: 0.9;
+
+    /* PAGE DE CONFIGURATION */
+    .config-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;      z-index: 20;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .config-page.visible {
+      display: flex;
+    }
+
+    .config-page h2 {
+      color: white;
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .config-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .config-btn {
+      width: 100%;
+      padding: 1.2rem 2rem;
+      border-radius: 15px;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.1s ease;
+      aspect-ratio: auto;
+      color: white;
+    }
+
+    .config-btn:active {
+      transform: scale(0.98);
+    }
+
+    .config-btn.import {
+      background: #ff9f0a;
+    }
+
+    .config-btn.modify {
+      background: #333333;    }
+
+    .config-btn.return {
+      background: #a5a5a5;
+      color: black;
+      margin-top: 1rem;
+    }
+
+    /* MODAL DE MODIFICATION TEXTE */
+    .text-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 30;
+      display: none;
+      flex-direction: column;
+      padding: 1.5rem;
+      overflow-y: auto;
+      transition: opacity 0.2s ease;
+    }
+
+    .text-modal.visible {
+      display: flex;
+    }
+
+    .text-modal.hidden-panel {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .text-modal.hidden-panel .control-group,
+    .text-modal.hidden-panel .modal-header,
+    .text-modal.hidden-panel .color-input-wrapper,
+    .text-modal.hidden-panel .modal-buttons {
+      pointer-events: none;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #333;
+    }
+    .modal-header h3 {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .toggle-visibility-btn {
+      width: 50px;
+      height: 30px;
+      border: 2px solid #ff9f0a;
+      border-radius: 15px;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      aspect-ratio: auto;
+    }
+
+    .toggle-visibility-btn.active {
+      background: #ff9f0a;
+    }
+
+    .toggle-visibility-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: #ff9f0a;
+      transition: fill 0.3s ease;
+    }
+
+    .toggle-visibility-btn.active svg {
+      fill: black;
+    }
+
+    .control-group {
+      margin-bottom: 1.8rem;
+      width: 100%;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .control-label {
+      color: #a5a5a5;
+      font-size: 1rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;      align-items: center;
+    }
+
+    .control-value {
+      background: transparent;
+      border: 1px solid #ff9f0a;
+      color: #ff9f0a;
+      padding: 0.3rem 0.8rem;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      min-width: 60px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .control-value:active {
+      background: #ff9f0a;
+      color: black;
+    }
+
+    .slider-container {
+      position: relative;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #333;
+    }
+
+    .slider {
+      width: 100%;
+      height: 100%;
+      border-radius: 3px;
+      background: transparent;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .slider::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: transparent;
+      border-radius: 3px;
+    }
+    .slider::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      background: transparent;
+      border-radius: 3px;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ff9f0a;
+      cursor: grab;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      margin-top: -8px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ff9f0a;
+      cursor: grab;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 3;
+    }
+
+    .slider::-moz-range-thumb:active {
+      cursor: grabbing;
+    }
+
+    .color-input-wrapper {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .color-input {
+      width: 100%;      height: 60px;
+      border-radius: 12px;
+      border: 2px solid #333;
+      background: white;
+      cursor: pointer;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .color-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .color-input::-webkit-color-swatch {
+      border: none;
+      border-radius: 10px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: auto;
+      padding-top: 2rem;
+      width: 100%;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 1rem;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      aspect-ratio: auto;
+    }
+
+    .modal-btn.save {
+      background: #ff9f0a;
+      color: black;
+    }
+
+    .modal-btn.save:active {
+      transform: scale(0.98);
+      filter: brightness(0.9);
+    }
+    .modal-btn.cancel {
+      background: #333;
+      color: white;
+    }
+
+    .modal-btn.cancel:active {
+      transform: scale(0.98);
+      filter: brightness(0.8);
+    }
+
+    #imageInput {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="app-container">
-    <!-- INTERFACE CALCULATRICE -->
+    <!-- CALCULATRICE -->
     <div class="calculator" id="calculator">
-      <!-- AFFICHEUR -->
       <div class="display-container">
         <div id="display" class="display">0</div>
       </div>
 
-      <!-- BOUTONS -->
       <div class="buttons">
-        <!-- ligne 1 : AC/C, +/-, %, ÷ -->
         <button class="light-gray" id="acButton" onclick="handleACorC()"><span>AC</span></button>
-        <button class="light-gray" id="toggleSignButton" onclick="handleToggleSign()" onmousedown="startToggleSignLongPress()" onmouseup="cancelToggleSignLongPress()" onmouseleave="cancelToggleSignLongPress()" ontouchstart="startToggleSignLongPress()" ontouchend="cancelToggleSignLongPress()" ontouchcancel="cancelToggleSignLongPress()"><span>+/-</span></button>
+        <button class="light-gray" id="toggleSignButton" onclick="handlePlusMinusClick()" onmousedown="startToggleSignLongPress()" onmouseup="cancelToggleSignLongPress()" onmouseleave="cancelToggleSignLongPress()" ontouchstart="startToggleSignLongPress()" ontouchend="cancelToggleSignLongPress()" ontouchcancel="cancelToggleSignLongPress()"><span>+/-</span></button>
         <button class="light-gray" id="percentButton" onclick="handlePercent()"><span>%</span></button>
         <button class="orange" onclick="setOperator('/')"><span>÷</span></button>
 
-        <!-- ligne 2 : 7,8,9, × -->
         <button class="dark-gray" onclick="appendNumber('7')"><span>7</span></button>
         <button class="dark-gray" onclick="appendNumber('8')"><span>8</span></button>
         <button class="dark-gray" onclick="appendNumber('9')"><span>9</span></button>
         <button class="orange" onclick="setOperator('*')"><span>×</span></button>
 
-        <!-- ligne 3 : 4,5,6, − -->
         <button class="dark-gray" onclick="appendNumber('4')"><span>4</span></button>
         <button class="dark-gray" onclick="appendNumber('5')"><span>5</span></button>
         <button class="dark-gray" onclick="appendNumber('6')"><span>6</span></button>
         <button class="orange" onclick="setOperator('-')"><span>−</span></button>
 
-        <!-- ligne 4 : 1,2,3, + -->
         <button class="dark-gray" onclick="appendNumber('1')"><span>1</span></button>
         <button class="dark-gray" onclick="appendNumber('2')"><span>2</span></button>
         <button class="dark-gray" onclick="appendNumber('3')"><span>3</span></button>
         <button class="orange" onclick="setOperator('+')"><span>+</span></button>
 
-        <!-- ligne 5 : 0, ., = -->
         <button class="dark-gray btn-zero" id="zeroButton" onclick="appendNumber('0')" onmousedown="startZeroLongPress()" onmouseup="cancelZeroLongPress()" onmouseleave="cancelZeroLongPress()" ontouchstart="startZeroLongPress()" ontouchend="cancelZeroLongPress()" ontouchcancel="cancelZeroLongPress()"><span>0</span></button>
         <button class="dark-gray" id="dotButton" onclick="handleDotClick()"><span>.</span></button>
         <button class="orange" onclick="calculate()"><span>=</span></button>
       </div>
     </div>
-
     <!-- IMAGE PLEIN ÉCRAN -->
     <div class="fullscreen-image" id="fullscreenImage" ondblclick="hideImage()">
-      <img src="capture.jpg" alt="Capture">
+      <img id="fullscreenImg" src="capture.jpg" alt="Capture">
       <div class="image-text" id="imageText">ligne/across/page - P</div>
+    </div>
+
+    <!-- PAGE CONFIGURATION -->
+    <div class="config-page" id="configPage">
+      <h2>Configuration</h2>
+      <div class="config-buttons">
+        <button class="config-btn import" onclick="triggerImageImport()">📷 Importer l'image</button>
+        <button class="config-btn modify" onclick="openTextModal()">✏️ Modifier le texte</button>
+        <button class="config-btn return" onclick="closeConfigPage()">← Retour</button>
+      </div>
+      <input type="file" id="imageInput" accept="image/*" onchange="handleImageImport(event)">
+    </div>
+
+    <!-- MODAL TEXTE -->
+    <div class="text-modal" id="textModal">
+      <div class="modal-header">
+        <h3>Modifier le texte</h3>
+        <button class="toggle-visibility-btn active" id="toggleVisibilityBtn" onmousedown="startPanelHide()" onmouseup="endPanelHide()" onmouseleave="endPanelHide()" ontouchstart="startPanelHide()" ontouchend="endPanelHide()" ontouchcancel="endPanelHide()">
+          <svg viewBox="0 0 24 24" id="eyeIcon">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>Position X</span>
+          <span class="control-value" id="posXValue" onclick="resetSlider('posX')">50%</span>
+        </div>
+        <div class="slider-container">
+          <input type="range" min="0" max="100" value="50" class="slider" id="posXSlider" onmousedown="startSliderDrag('posX')" onmouseup="endSliderDrag()" onmouseleave="endSliderDrag()" ontouchstart="startSliderDrag('posX')" ontouchend="endSliderDrag()" ontouchcancel="endSliderDrag()" oninput="updateSliderValue('posX', this.value)">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>Position Y</span>
+          <span class="control-value" id="posYValue" onclick="resetSlider('posY')">50%</span>
+        </div>
+        <div class="slider-container">
+          <input type="range" min="0" max="100" value="50" class="slider" id="posYSlider" onmousedown="startSliderDrag('posY')" onmouseup="endSliderDrag()" onmouseleave="endSliderDrag()" ontouchstart="startSliderDrag('posY')" ontouchend="endSliderDrag()" ontouchcancel="endSliderDrag()" oninput="updateSliderValue('posY', this.value)">
+        </div>
+      </div>
+
+      <div class="control-group">        <div class="control-label">
+          <span>Taille</span>
+          <span class="control-value" id="sizeValue" onclick="resetSlider('size')">12px</span>
+        </div>
+        <div class="slider-container">
+          <input type="range" min="8" max="48" value="12" class="slider" id="sizeSlider" onmousedown="startSliderDrag('size')" onmouseup="endSliderDrag()" onmouseleave="endSliderDrag()" ontouchstart="startSliderDrag('size')" ontouchend="endSliderDrag()" ontouchcancel="endSliderDrag()" oninput="updateSliderValue('size', this.value)">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">
+          <span>Couleur</span>
+        </div>
+        <div class="color-input-wrapper">
+          <input type="color" class="color-input" id="colorInput" value="#808080" onchange="updateColor(this.value)">
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeTextModal()">Annuler</button>
+        <button class="modal-btn save" onclick="saveTextSettings()">Enregistrer</button>
+      </div>
     </div>
   </div>
 
 <script>
-  (function() {
-    // ----- ÉLÉMENTS DOM -----
-    const display = document.getElementById('display');
-    const acButton = document.getElementById('acButton');
-    const toggleSignButton = document.getElementById('toggleSignButton');
-    const percentButton = document.getElementById('percentButton');
-    const dotButton = document.getElementById('dotButton');
-    const zeroButton = document.getElementById('zeroButton');
-    const calculator = document.getElementById('calculator');
-    const fullscreenImage = document.getElementById('fullscreenImage');
-    const imageText = document.getElementById('imageText');
-    
-    // ----- CONSTANTES -----
-    const MAX_DIGITS = 8;
-    const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
-    const TOGGLE_SIGN_LONG_PRESS = 500;      // 0.5 seconde pour +/-
-    const ZERO_LONG_PRESS = 1000;             // 1 seconde pour 0
+  // ===== VARIABLES GLOBALES =====
+  let display, acButton, toggleSignButton, percentButton, dotButton, zeroButton;
+  let calculator, fullscreenImage, fullscreenImg, imageText;
+  let configPage, textModal, imageInput;
+  let posXSlider, posYSlider, sizeSlider, colorInput;
+  let posXValue, posYValue, sizeValue;
+  let toggleVisibilityBtn, eyeIcon;
 
-    // ----- VARIABLE P -----
-    let P = null;
-    
-    // ----- DONNÉES API -----
-    let apiData = null;
-    
-    // ----- CYCLE DU % -----
-    let percentCycle = 0;
-    
-    // ----- MODE SPÉCIAL -----
-    let secretMode = true;
-    
-    // ----- ÉTAT -----
-    let firstNumber = null;
-    let operator = null;
-    let waitingForSecondNumber = false;
-    
-    // ----- COMPTEUR POUR P -----
-    let equalPressCount = 0;
-    let pStored = false;
-    
-    // ----- TIMERS POUR LES APPUIS LONGS -----
-    let toggleSignLongPressTimer = null;
-    let zeroLongPressTimer = null;
-    
-    // ----- VARIABLES POUR LE DOUBLE APPUI SUR "." -----
-    let dotClickCount = 0;
-    let dotClickTimer = null;
+  const MAX_DIGITS = 8;
+  const API_URL = 'https://pi-revelations-3a64f-default-rtdb.europe-west1.firebasedatabase.app/code/.json';
+  const TOGGLE_SIGN_LONG_PRESS = 500;
+  const ZERO_LONG_PRESS = 1000;
+  const PLUS_MINUS_PERCENT_DELAY = 300;
 
-    // ----- FONCTION POUR RÉINITIALISER TOUTE LA CALCULATRICE -----
-    function resetCalculator() {
+  // Valeurs par défaut
+  const DEFAULT_SETTINGS = {
+    x: 50,
+    y: 50,
+    size: 12,
+    color: '#808080',
+    visible: true
+  };
+
+  let P = null;  let apiData = null;
+  let percentCycle = 0;
+  let secretMode = true;
+  let firstNumber = null;
+  let operator = null;
+  let waitingForSecondNumber = false;
+  let equalPressCount = 0;
+  let pStored = false;
+
+  let toggleSignLongPressTimer = null;
+  let zeroLongPressTimer = null;
+  let dotClickCount = 0;
+  let dotClickTimer = null;
+  let plusMinusClicked = false;
+  let plusMinusTimer = null;
+
+  let textSettings = { ...DEFAULT_SETTINGS };
+  let tempTextSettings = { ...DEFAULT_SETTINGS };
+
+  // Variables pour le panneau caché
+  let panelHidden = false;
+  let activeSlider = null;
+  let isDragging = false;
+
+  // ===== INITIALISATION =====
+  document.addEventListener('DOMContentLoaded', function() {
+    initElements();
+    loadSavedSettings();
+    updateACButton();
+    console.log('✅ Calculatrice initialisée');
+  });
+
+  function initElements() {
+    display = document.getElementById('display');
+    acButton = document.getElementById('acButton');
+    toggleSignButton = document.getElementById('toggleSignButton');
+    percentButton = document.getElementById('percentButton');
+    dotButton = document.getElementById('dotButton');
+    zeroButton = document.getElementById('zeroButton');
+    calculator = document.getElementById('calculator');
+    fullscreenImage = document.getElementById('fullscreenImage');
+    fullscreenImg = document.getElementById('fullscreenImg');
+    imageText = document.getElementById('imageText');
+    configPage = document.getElementById('configPage');
+    textModal = document.getElementById('textModal');
+    imageInput = document.getElementById('imageInput');
+    posXSlider = document.getElementById('posXSlider');
+    posYSlider = document.getElementById('posYSlider');
+    sizeSlider = document.getElementById('sizeSlider');
+    colorInput = document.getElementById('colorInput');    posXValue = document.getElementById('posXValue');
+    posYValue = document.getElementById('posYValue');
+    sizeValue = document.getElementById('sizeValue');
+    toggleVisibilityBtn = document.getElementById('toggleVisibilityBtn');
+    eyeIcon = document.getElementById('eyeIcon');
+  }
+
+  // ===== SAUVEGARDE / CHARGEMENT =====
+  function loadSavedSettings() {
+    try {
+      const saved = localStorage.getItem('calcTextSettings');
+      if (saved) {
+        textSettings = JSON.parse(saved);
+        applyTextSettings();
+      }
+      const savedImage = localStorage.getItem('calcCustomImage');
+      if (savedImage && fullscreenImg) {
+        fullscreenImg.src = savedImage;
+      }
+    } catch (e) {
+      console.warn('⚠️ localStorage non disponible:', e);
+    }
+  }
+
+  function saveTextSettingsToStorage() {
+    try {
+      localStorage.setItem('calcTextSettings', JSON.stringify(textSettings));
+    } catch (e) {
+      console.warn('⚠️ Impossible de sauvegarder:', e);
+    }
+  }
+
+  function saveImageToStorage(imageDataUrl) {
+    try {
+      localStorage.setItem('calcCustomImage', imageDataUrl);
+    } catch (e) {
+      console.warn('⚠️ Image trop grande:', e);
+      alert('⚠️ Image trop grande pour sauvegarde permanente');
+    }
+  }
+
+  function applyTextSettings() {
+    if (!imageText) return;
+    imageText.style.left = textSettings.x + '%';
+    imageText.style.top = textSettings.y + '%';
+    imageText.style.fontSize = textSettings.size + 'px';
+    imageText.style.color = textSettings.color;
+    imageText.style.display = textSettings.visible ? 'block' : 'none';
+  }
+  // ===== CALCULATRICE =====
+  function resetCalculator() {
+    if (!display) return;
+    display.innerText = '0';
+    firstNumber = null;
+    operator = null;
+    waitingForSecondNumber = false;
+    P = null;
+    apiData = null;
+    pStored = false;
+    equalPressCount = 0;
+    secretMode = true;
+    percentCycle = 0;
+    updateImageText();
+    updateACButton();
+    console.log('🔄 Réinitialisé');
+  }
+
+  function formatToFourDigits(num) {
+    return num.toString().padStart(4, '0');
+  }
+
+  function isValidForP(str) {
+    if (str.includes('.')) return false;
+    const num = parseInt(str, 10);
+    return !isNaN(num) && num >= 0 && num <= 9999;
+  }
+
+  function updateImageText() {
+    if (!imageText) return;
+    if (apiData && P) {
+      imageText.textContent = apiData.line + '/' + apiData.across + '/' + apiData.page + ' - ' + P;
+    } else if (apiData) {
+      imageText.textContent = apiData.line + '/' + apiData.across + '/' + apiData.page + ' - ?';
+    } else if (P) {
+      imageText.textContent = '?/?/? - ' + P;
+    } else {
+      imageText.textContent = '?/?/? - ?';
+    }
+  }
+
+  function showImage() {
+    updateImageText();
+    if (calculator) calculator.classList.add('hidden');
+    if (fullscreenImage) fullscreenImage.classList.add('visible');
+  }
+
+  window.hideImage = function() {
+    if (calculator) calculator.classList.remove('hidden');
+    if (fullscreenImage) fullscreenImage.classList.remove('visible');  };
+
+  // ===== CONFIGURATION =====
+  window.openConfigPage = function() {
+    if (calculator) calculator.classList.add('hidden');
+    if (configPage) configPage.classList.add('visible');
+    plusMinusClicked = false;
+    if (plusMinusTimer) {
+      clearTimeout(plusMinusTimer);
+      plusMinusTimer = null;
+    }
+  };
+
+  window.closeConfigPage = function() {
+    if (configPage) configPage.classList.remove('visible');
+    if (calculator) calculator.classList.remove('hidden');
+  };
+
+  window.triggerImageImport = function() {
+    if (imageInput) imageInput.click();
+  };
+
+  window.handleImageImport = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const imageDataUrl = e.target.result;
+      if (fullscreenImg) fullscreenImg.src = imageDataUrl;
+      saveImageToStorage(imageDataUrl);
+      alert('✅ Image importée !');
+    };
+    reader.onerror = function() {
+      alert('❌ Erreur import image');
+    };
+    reader.readAsDataURL(file);
+    if (imageInput) imageInput.value = '';
+  };
+
+  // ===== MODAL TEXTE - GESTION DU PANNEAU CACHÉ =====
+  window.startPanelHide = function() {
+    if (!textModal) return;
+    panelHidden = true;
+    textModal.classList.add('hidden-panel');
+  };
+
+  window.endPanelHide = function() {
+    if (!textModal) return;
+    panelHidden = false;    textModal.classList.remove('hidden-panel');
+  };
+
+  window.startSliderDrag = function(sliderType) {
+    activeSlider = sliderType;
+    isDragging = true;
+    if (!textModal) return;
+    panelHidden = true;
+    textModal.classList.add('hidden-panel');
+  };
+
+  window.endSliderDrag = function() {
+    isDragging = false;
+    activeSlider = null;
+    if (!textModal) return;
+    panelHidden = false;
+    textModal.classList.remove('hidden-panel');
+  };
+
+  window.openTextModal = function() {
+    if (!textModal) return;
+    
+    tempTextSettings = { ...textSettings };
+    
+    if (posXSlider) {
+      posXSlider.value = tempTextSettings.x;
+      posXValue.textContent = tempTextSettings.x + '%';
+    }
+    if (posYSlider) {
+      posYSlider.value = tempTextSettings.y;
+      posYValue.textContent = tempTextSettings.y + '%';
+    }
+    if (sizeSlider) {
+      sizeSlider.value = tempTextSettings.size;
+      sizeValue.textContent = tempTextSettings.size + 'px';
+    }
+    if (colorInput) {
+      colorInput.value = tempTextSettings.color;
+    }
+    
+    updateVisibilityButton();
+    textModal.classList.add('visible');
+    applyTempSettings();
+  };
+
+  window.closeTextModal = function() {
+    if (textModal) textModal.classList.remove('visible');
+    panelHidden = false;
+    if (textModal) textModal.classList.remove('hidden-panel');
+    applyTextSettings();  };
+
+  window.resetSlider = function(type) {
+    let defaultValue;
+    if (type === 'posX') {
+      defaultValue = DEFAULT_SETTINGS.x;
+      tempTextSettings.x = defaultValue;
+      if (posXSlider) posXSlider.value = defaultValue;
+      if (posXValue) posXValue.textContent = defaultValue + '%';
+    } else if (type === 'posY') {
+      defaultValue = DEFAULT_SETTINGS.y;
+      tempTextSettings.y = defaultValue;
+      if (posYSlider) posYSlider.value = defaultValue;
+      if (posYValue) posYValue.textContent = defaultValue + '%';
+    } else if (type === 'size') {
+      defaultValue = DEFAULT_SETTINGS.size;
+      tempTextSettings.size = defaultValue;
+      if (sizeSlider) sizeSlider.value = defaultValue;
+      if (sizeValue) sizeValue.textContent = defaultValue + 'px';
+    }
+    applyTempSettings();
+  };
+
+  window.updateSliderValue = function(type, value) {
+    const numValue = parseInt(value, 10);
+    
+    if (type === 'posX') {
+      tempTextSettings.x = numValue;
+      if (posXValue) posXValue.textContent = numValue + '%';
+    } else if (type === 'posY') {
+      tempTextSettings.y = numValue;
+      if (posYValue) posYValue.textContent = numValue + '%';
+    } else if (type === 'size') {
+      tempTextSettings.size = numValue;
+      if (sizeValue) sizeValue.textContent = numValue + 'px';
+    }
+    
+    applyTempSettings();
+  };
+
+  window.updateColor = function(color) {
+    tempTextSettings.color = color;
+    applyTempSettings();
+  };
+
+  window.toggleTextVisibility = function() {
+    tempTextSettings.visible = !tempTextSettings.visible;
+    updateVisibilityButton();
+    applyTempSettings();
+  };
+  function updateVisibilityButton() {
+    if (!toggleVisibilityBtn) return;
+    if (tempTextSettings.visible) {
+      toggleVisibilityBtn.classList.add('active');
+    } else {
+      toggleVisibilityBtn.classList.remove('active');
+    }
+  }
+
+  function applyTempSettings() {
+    if (!imageText) return;
+    imageText.style.left = tempTextSettings.x + '%';
+    imageText.style.top = tempTextSettings.y + '%';
+    imageText.style.fontSize = tempTextSettings.size + 'px';
+    imageText.style.color = tempTextSettings.color;
+    imageText.style.display = tempTextSettings.visible ? 'block' : 'none';
+  }
+
+  window.saveTextSettings = function() {
+    textSettings = { ...tempTextSettings };
+    applyTextSettings();
+    saveTextSettingsToStorage();
+    closeTextModal();
+    alert('✅ Paramètres enregistrés !');
+  };
+
+  // ===== BOUTONS CALCULATRICE =====
+  window.handleDotClick = function() {
+    if (!secretMode) {
+      performAppendDot();
+      return;
+    }
+    
+    dotClickCount++;
+    if (dotClickTimer) clearTimeout(dotClickTimer);
+    
+    dotClickTimer = setTimeout(function() {
+      dotClickCount = 0;
+      dotClickTimer = null;
+    }, 300);
+    
+    if (dotClickCount === 2) {
+      showImage();
+      dotClickCount = 0;
+      clearTimeout(dotClickTimer);
+      dotClickTimer = null;
+      return;
+    }
+        performAppendDot();
+  };
+
+  function performAppendDot() {
+    if (!display) return;
+    let currentText = display.innerText;
+    
+    if (currentText === 'Erreur' || currentText === 'Chargement...') {
+      display.innerText = '0';
+      currentText = '0';
+      firstNumber = null;
+      operator = null;
+      waitingForSecondNumber = false;
+    }
+
+    if (waitingForSecondNumber) {
+      display.innerText = '0.';
+      waitingForSecondNumber = false;
+      resetPercentCycle();
+    } else {
+      if (currentText.includes('.')) return;
+      display.innerText = currentText + '.';
+    }
+    
+    updateACButton();
+  }
+
+  window.handlePlusMinusClick = function() {
+    if (!secretMode) {
+      performToggleSign();
+      return;
+    }
+    
+    plusMinusClicked = true;
+    if (plusMinusTimer) clearTimeout(plusMinusTimer);
+    
+    plusMinusTimer = setTimeout(function() {
+      plusMinusClicked = false;
+      plusMinusTimer = null;
+      performToggleSign();
+    }, PLUS_MINUS_PERCENT_DELAY);
+  };
+
+  function performToggleSign() {
+    if (!display) return;
+    if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+    let val = parseFloat(display.innerText);
+    if (isNaN(val)) return;
+    val = val * -1;
+    display.innerText = formatDisplay(val);    resetPercentCycle();
+    updateACButton();
+  }
+
+  window.startToggleSignLongPress = function() {
+    if (toggleSignLongPressTimer) clearTimeout(toggleSignLongPressTimer);
+    
+    toggleSignLongPressTimer = setTimeout(function() {
+      secretMode = !secretMode;
+      percentCycle = 0;
+      plusMinusClicked = false;
+      if (plusMinusTimer) {
+        clearTimeout(plusMinusTimer);
+        plusMinusTimer = null;
+      }
+      
+      console.log(secretMode ? '🔓 Mode secret ON' : '🔒 Mode secret OFF');
+      
+      if (percentButton) {
+        percentButton.style.filter = 'brightness(1.5)';
+        setTimeout(function() {
+          percentButton.style.filter = '';
+        }, 200);
+      }
+      
+      toggleSignLongPressTimer = null;
+    }, TOGGLE_SIGN_LONG_PRESS);
+  };
+
+  window.cancelToggleSignLongPress = function() {
+    if (toggleSignLongPressTimer) {
+      clearTimeout(toggleSignLongPressTimer);
+      toggleSignLongPressTimer = null;
+    }
+  };
+
+  window.startZeroLongPress = function() {
+    if (zeroLongPressTimer) clearTimeout(zeroLongPressTimer);
+    
+    zeroLongPressTimer = setTimeout(function() {
+      resetCalculator();
+      if (zeroButton) {
+        zeroButton.style.filter = 'brightness(1.5)';
+        setTimeout(function() {
+          zeroButton.style.filter = '';
+        }, 200);
+      }
+      zeroLongPressTimer = null;
+    }, ZERO_LONG_PRESS);
+  };
+  window.cancelZeroLongPress = function() {
+    if (zeroLongPressTimer) {
+      clearTimeout(zeroLongPressTimer);
+      zeroLongPressTimer = null;
+    }
+  };
+
+  function hasFourOrMoreDigits(numberStr) {
+    const digitsOnly = numberStr.replace('-', '').replace('.', '');
+    return digitsOnly.length >= 4;
+  }
+
+  async function fetchApiData(code) {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+      if (data[code]) {
+        apiData = data[code];
+        console.log('📡 API:', apiData);
+        updateImageText();
+      } else {
+        apiData = null;
+      }
+    } catch (error) {
+      console.error('⚠️ Erreur API:', error);
+      apiData = null;
+    }
+  }
+
+  window.handlePercent = function() {
+    if (secretMode && plusMinusClicked) {
+      if (plusMinusTimer) {
+        clearTimeout(plusMinusTimer);
+        plusMinusTimer = null;
+      }
+      plusMinusClicked = false;
+      openConfigPage();
+      return;
+    }
+    
+    if (!secretMode) {
+      performNormalPercentage();
+      return;
+    }
+    performSecretPercent();
+  };
+
+  function performNormalPercentage() {
+    if (!display) return;    if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
+    let val = parseFloat(display.innerText);
+    if (isNaN(val)) return;
+    val = val / 100;
+    display.innerText = formatDisplay(val);
+    updateACButton();
+  }
+
+  function performSecretPercent() {
+    setTimeout(function() {
+      if (acButton) acButton.innerHTML = '<span>AC</span>';
+    }, 0);
+    
+    if (P === null) {
+      if (display) display.innerText = '0';
+      updateACButton();
+      return;
+    }
+    
+    if (apiData === null) {
+      if (display) display.innerText = 'Chargement...';
+      updateACButton();
+      return;
+    }
+    
+    if (!display) return;
+    
+    switch(percentCycle) {
+      case 0:
+        display.innerText = P;
+        percentCycle = 1;
+        break;
+      case 1:
+        display.innerText = apiData.line + '.' + apiData.across + '.' + apiData.page;
+        percentCycle = 2;
+        break;
+      case 2:
+        display.innerText = '' + apiData.line + apiData.across + apiData.page;
+        percentCycle = 0;
+        break;
+    }
+    
+    updateACButton();
+  }
+
+  function resetPercentCycle() {
+    percentCycle = 0;
+  }
+
+  function updateACButton() {    if (!acButton || !display) return;
+    const currentText = display.innerText;
+    
+    if (currentText === '0' || currentText === 'Erreur' || currentText === 'Chargement...' ||
+        (waitingForSecondNumber && currentText === '0')) {
+      acButton.innerHTML = '<span>AC</span>';
+    } else {
+      acButton.innerHTML = '<span>C</span>';
+    }
+  }
+
+  window.handleACorC = function() {
+    if (!display || !acButton) return;
+    const currentText = display.innerText;
+    const buttonText = acButton.innerText;
+    
+    if (buttonText === 'AC') {
       display.innerText = '0';
       firstNumber = null;
       operator = null;
       waitingForSecondNumber = false;
-      
-      // Réinitialiser P et tout ce qui va avec
-      P = null;
-      apiData = null;
-      pStored = false;
-      equalPressCount = 0;
-      secretMode = true;  // Réactiver le mode secret
-      percentCycle = 0;
-      
-      // Mettre à jour l'interface
-      updateImageText();
-      updateACButton();
-      
-      console.log("🔄 Calculatrice réinitialisée");
-    }
-
-    // ----- FONCTION POUR FORMATER UN NOMBRE EN 4 CHIFFRES -----
-    function formatToFourDigits(num) {
-      return num.toString().padStart(4, '0');
-    }
-
-    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE EST VALIDE POUR P -----
-    function isValidForP(str) {
-      if (str.includes('.')) return false;
-      const num = parseInt(str, 10);
-      return !isNaN(num) && num >= 0 && num <= 9999;
-    }
-
-    // ----- FONCTION POUR METTRE À JOUR LE TEXTE DE L'IMAGE -----
-    function updateImageText() {
-      if (apiData && P) {
-        imageText.textContent = `${apiData.line}/${apiData.across}/${apiData.page} - ${P}`;
-      } else if (apiData) {
-        imageText.textContent = `${apiData.line}/${apiData.across}/${apiData.page} - ?`;
-      } else if (P) {
-        imageText.textContent = `?/?/? - ${P}`;
-      } else {
-        imageText.textContent = "?/?/? - ?";
-      }
-    }
-
-    // ----- FONCTION POUR AFFICHER L'IMAGE -----
-    function showImage() {
-      updateImageText();
-      calculator.classList.add('hidden');
-      fullscreenImage.classList.add('visible');
-    }
-
-    // ----- FONCTION POUR CACHER L'IMAGE -----
-    window.hideImage = function() {
-      calculator.classList.remove('hidden');
-      fullscreenImage.classList.remove('visible');
-    };
-
-    // ----- GESTIONNAIRE POUR LE BOUTON "." (DOUBLE APPUI) -----
-    window.handleDotClick = function() {
-      if (!secretMode) {
-        performAppendDot();
-        return;
-      }
-      
-      dotClickCount++;
-      
-      if (dotClickTimer) {
-        clearTimeout(dotClickTimer);
-      }
-      
-      dotClickTimer = setTimeout(() => {
-        dotClickCount = 0;
-        dotClickTimer = null;
-      }, 300);
-      
-      if (dotClickCount === 2) {
-        showImage();
-        dotClickCount = 0;
-        clearTimeout(dotClickTimer);
-        dotClickTimer = null;
-        return;
-      }
-      
-      performAppendDot();
-    };
-
-    // ----- FONCTION NORMALE POUR AJOUTER UN POINT -----
-    function performAppendDot() {
-      let currentText = display.innerText;
-      
-      if (currentText === 'Erreur' || currentText === 'Chargement...') {
-        display.innerText = '0';
-        currentText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-      }
-
-      if (waitingForSecondNumber) {
-        display.innerText = '0.';
-        waitingForSecondNumber = false;
-        resetPercentCycle();
-      } else {
-        if (currentText.includes('.')) return;
-        display.innerText = currentText + '.';
-      }
-      
-      updateACButton();
-    }
-
-    // ----- GESTIONNAIRES POUR L'APPUI LONG SUR +/- -----
-    window.startToggleSignLongPress = function() {
-      if (toggleSignLongPressTimer) {
-        clearTimeout(toggleSignLongPressTimer);
-      }
-      
-      toggleSignLongPressTimer = setTimeout(() => {
-        secretMode = !secretMode;
-        percentCycle = 0;
-        
-        console.log(secretMode ? "🔓 Mode secret ACTIVÉ" : "🔒 Mode secret DÉSACTIVÉ");
-        
-        percentButton.style.filter = 'brightness(1.5)';
-        setTimeout(() => {
-          percentButton.style.filter = '';
-        }, 200);
-        
-        toggleSignLongPressTimer = null;
-      }, TOGGLE_SIGN_LONG_PRESS);
-    };
-
-    window.cancelToggleSignLongPress = function() {
-      if (toggleSignLongPressTimer) {
-        clearTimeout(toggleSignLongPressTimer);
-        toggleSignLongPressTimer = null;
-      }
-    };
-
-    // ----- GESTIONNAIRES POUR L'APPUI LONG SUR 0 -----
-    window.startZeroLongPress = function() {
-      if (zeroLongPressTimer) {
-        clearTimeout(zeroLongPressTimer);
-      }
-      
-      zeroLongPressTimer = setTimeout(() => {
-        resetCalculator();
-        
-        zeroButton.style.filter = 'brightness(1.5)';
-        setTimeout(() => {
-          zeroButton.style.filter = '';
-        }, 200);
-        
-        zeroLongPressTimer = null;
-      }, ZERO_LONG_PRESS);
-    };
-
-    window.cancelZeroLongPress = function() {
-      if (zeroLongPressTimer) {
-        clearTimeout(zeroLongPressTimer);
-        zeroLongPressTimer = null;
-      }
-    };
-
-    // ----- FONCTION POUR EXTRAIRE LES 4 CHIFFRES SANS VIRGULE -----
-    function extractFourDigits(numberStr) {
-      return numberStr.replace('.', '');
-    }
-
-    // ----- FONCTION POUR VÉRIFIER SI UN NOMBRE A 4 CHIFFRES OU PLUS -----
-    function hasFourOrMoreDigits(numberStr) {
-      const digitsOnly = numberStr.replace('-', '').replace('.', '');
-      return digitsOnly.length >= 4;
-    }
-
-    // ----- FONCTION POUR APPELER L'API -----
-    async function fetchApiData(code) {
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        if (data[code]) {
-          apiData = data[code];
-          console.log("📡 Données API pour", code, ":", apiData);
-          updateImageText();
-        } else {
-          console.log("❌ Code non trouvé:", code);
-          apiData = null;
-        }
-      } catch (error) {
-        console.error("⚠️ Erreur API:", error);
-        apiData = null;
-      }
-    }
-
-    // ----- FONCTION POUR LE BOUTON % -----
-    window.handlePercent = function() {
-      if (!secretMode) {
-        performNormalPercentage();
-        return;
-      }
-      performSecretPercent();
-    };
-
-    // ----- POURCENTAGE NORMAL -----
-    function performNormalPercentage() {
-      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
-      let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
-      val = val / 100;
-      display.innerText = formatDisplay(val);
-      updateACButton();
-    }
-
-    // ----- MODE SECRET (cycle) -----
-    function performSecretPercent() {
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      if (P === null) {
-        display.innerText = "0";
-        updateACButton();
-        return;
-      }
-      
-      if (apiData === null) {
-        display.innerText = "Chargement...";
-        updateACButton();
-        return;
-      }
-      
-      switch(percentCycle) {
-        case 0:
-          display.innerText = P;
-          percentCycle = 1;
-          break;
-        case 1:
-          display.innerText = `${apiData.line}.${apiData.across}.${apiData.page}`;
-          percentCycle = 2;
-          break;
-        case 2:
-          display.innerText = `${apiData.line}${apiData.across}${apiData.page}`;
-          percentCycle = 0;
-          break;
-      }
-      
-      updateACButton();
-    }
-
-    // ----- FONCTION POUR RÉINITIALISER LE CYCLE % -----
-    function resetPercentCycle() {
-      percentCycle = 0;
-    }
-
-    // ----- FONCTION POUR METTRE À JOUR LE BOUTON AC/C -----
-    function updateACButton() {
-      if (!acButton) return;
-      
-      const currentText = display.innerText;
-      
-      if (currentText === '0' || 
-          currentText === 'Erreur' || 
-          currentText === 'Chargement...' ||
-          (waitingForSecondNumber && currentText === '0')) {
-        acButton.innerHTML = '<span>AC</span>';
-      } else {
-        acButton.innerHTML = '<span>C</span>';
-      }
-    }
-
-    // ----- AC/C -----
-    window.handleACorC = function() {
-      const currentText = display.innerText;
-      const buttonText = acButton.innerText;
-      
-      if (buttonText === 'AC') {
-        display.innerText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-        resetPercentCycle();
-        hideImage();
-      } else {
-        if (currentText === 'Erreur' || currentText === 'Chargement...') {
-          display.innerText = '0';
-        } 
-        else if (currentText.length === 1) {
-          display.innerText = '0';
-        }
-        else if (currentText.length === 2 && currentText.startsWith('-')) {
-          display.innerText = '0';
-        }
-        else {
-          display.innerText = currentText.slice(0, -1);
-        }
-      }
-      
-      updateACButton();
-    };
-
-    // ----- AJOUTER UN CHIFFRE -----
-    window.appendNumber = function(number) {
-      let currentText = display.innerText;
-      
-      if (currentText === 'Erreur' || currentText === 'Chargement...') {
-        display.innerText = '0';
-        currentText = '0';
-        firstNumber = null;
-        operator = null;
-        waitingForSecondNumber = false;
-      }
-
-      if (waitingForSecondNumber) {
-        if (number === '.') {
-          display.innerText = '0.';
-        } else {
-          display.innerText = number;
-        }
-        waitingForSecondNumber = false;
-        resetPercentCycle();
-      } else {
-        let newText = currentText;
-        
-        if (number === '.') {
-          if (currentText.includes('.')) return;
-          newText = currentText + '.';
-        } else {
-          if (currentText === '0') {
-            newText = number;
-          } else {
-            newText = currentText + number;
-          }
-        }
-        
-        if (countDigits(newText) <= MAX_DIGITS) {
-          display.innerText = newText;
-        }
-      }
-      
-      updateACButton();
-    };
-
-    // ----- OPÉRATEURS -----
-    window.setOperator = function(op) {
-      if (operator && waitingForSecondNumber) {
-        operator = op;
-        updateACButton();
-        return;
-      }
-
-      if (firstNumber !== null && operator && !waitingForSecondNumber) {
-        let secondNumber = parseFloat(display.innerText);
-        let result = operate(operator, firstNumber, secondNumber);
-        if (result === 'Erreur') {
-          display.innerText = 'Erreur';
-          firstNumber = null;
-          operator = null;
-          waitingForSecondNumber = false;
-          updateACButton();
-          return;
-        } else {
-          const formattedResult = formatDisplay(result);
-          display.innerText = formattedResult;
-          firstNumber = parseFloat(formattedResult);
-        }
-      } else {
-        firstNumber = parseFloat(display.innerText);
-      }
-
-      operator = op;
-      waitingForSecondNumber = true;
-      display.innerText = '0';
       resetPercentCycle();
-      updateACButton();
-    };
+      hideImage();
+    } else {
+      if (currentText === 'Erreur' || currentText === 'Chargement...') {
+        display.innerText = '0';
+      } else if (currentText.length === 1) {
+        display.innerText = '0';
+      } else if (currentText.length === 2 && currentText.startsWith('-')) {
+        display.innerText = '0';
+      } else {
+        display.innerText = currentText.slice(0, -1);
+      }
+    }
+    
+    updateACButton();
+  };
 
-    // ----- CALCUL -----
-    window.calculate = function() {
-      if (!operator || waitingForSecondNumber) return;
-
-      equalPressCount++;
+  window.appendNumber = function(number) {
+    if (!display) return;
+    let currentText = display.innerText;
+    
+    if (currentText === 'Erreur' || currentText === 'Chargement...') {
+      display.innerText = '0';
+      currentText = '0';
+      firstNumber = null;
+      operator = null;
+      waitingForSecondNumber = false;
+    }
+    if (waitingForSecondNumber) {
+      if (number === '.') {
+        display.innerText = '0.';
+      } else {
+        display.innerText = number;
+      }
+      waitingForSecondNumber = false;
+      resetPercentCycle();
+    } else {
+      let newText = currentText;
       
-      const currentNumberStr = display.innerText;
-      
-      if (secretMode && operator === '/' && P !== null && apiData !== null) {
-        const secondNumber = parseFloat(currentNumberStr);
-        if (hasFourOrMoreDigits(currentNumberStr)) {
-          const acrossStr = apiData.across.toString().padStart(2, '0');
-          const result = `${apiData.line}.${acrossStr}${apiData.page}`;
-          display.innerText = result;
-          
-          firstNumber = null;
-          operator = null;
-          waitingForSecondNumber = true;
-          resetPercentCycle();
-          
-          setTimeout(() => {
-            acButton.innerHTML = '<span>AC</span>';
-          }, 0);
-          
-          updateACButton();
-          return;
+      if (number === '.') {
+        if (currentText.includes('.')) return;
+        newText = currentText + '.';
+      } else {
+        if (currentText === '0') {
+          newText = number;
+        } else {
+          newText = currentText + number;
         }
       }
       
-      const secondNumber = parseFloat(currentNumberStr);
-      const result = operate(operator, firstNumber, secondNumber);
+      if (countDigits(newText) <= MAX_DIGITS) {
+        display.innerText = newText;
+      }
+    }
+    
+    updateACButton();
+  };
 
+  window.setOperator = function(op) {
+    if (!display) return;
+    if (operator && waitingForSecondNumber) {
+      operator = op;
+      updateACButton();
+      return;
+    }
+
+    if (firstNumber !== null && operator && !waitingForSecondNumber) {
+      let secondNumber = parseFloat(display.innerText);
+      let result = operate(operator, firstNumber, secondNumber);
       if (result === 'Erreur') {
         display.innerText = 'Erreur';
         firstNumber = null;
@@ -771,120 +1320,144 @@
         waitingForSecondNumber = false;
         updateACButton();
         return;
-      }
-
-      if (!pStored && equalPressCount >= 3) {
-        if (isValidForP(currentNumberStr)) {
-          const num = parseInt(currentNumberStr, 10);
-          P = formatToFourDigits(num);
-          pStored = true;
-          console.log("✅ P stocké :", P);
-          fetchApiData(P);
-          updateImageText();
-        }
-      }
-
-      display.innerText = formatDisplay(result);
-      firstNumber = parseFloat(display.innerText);
-      operator = null;
-      waitingForSecondNumber = true;
-      
-      resetPercentCycle();
-      
-      setTimeout(() => {
-        acButton.innerHTML = '<span>AC</span>';
-      }, 0);
-      
-      updateACButton();
-    };
-
-    // ----- OPÉRATIONS -----
-    function operate(op, a, b) {
-      switch(op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': 
-          if (b === 0) return 'Erreur';
-          return a / b;
-        default: return b;
-      }
-    }
-
-    // ----- TOGGLE SIGN (clic court) -----
-    window.handleToggleSign = function() {
-      if (display.innerText === 'Erreur' || display.innerText === 'Chargement...') return;
-      let val = parseFloat(display.innerText);
-      if (isNaN(val)) return;
-      val = val * -1;
-      display.innerText = formatDisplay(val);
-      
-      resetPercentCycle();
-      updateACButton();
-    };
-
-    // ----- FONCTIONS UTILITAIRES -----
-    function countDigits(str) {
-      const withoutSign = str.replace('-', '');
-      const digitsOnly = withoutSign.replace('.', '');
-      return digitsOnly.length;
-    }
-
-    function formatDisplay(value) {
-      let str = String(value);
-      if (str === 'Erreur') return 'Erreur';
-      
-      const digitCount = countDigits(str);
-      if (digitCount <= MAX_DIGITS) return str;
-      
-      if (str.includes('.')) {
-        const parts = str.split('.');
-        const integerPart = parts[0].replace('-', '');
-        const sign = str.startsWith('-') ? '-' : '';
-        
-        if (integerPart.length >= MAX_DIGITS) {
-          return sign + integerPart.substring(0, MAX_DIGITS);
-        } else {
-          const maxDecimals = MAX_DIGITS - integerPart.length;
-          const decimalPart = parts[1].substring(0, maxDecimals);
-          return sign + integerPart + '.' + decimalPart;
-        }
       } else {
-        const sign = str.startsWith('-') ? '-' : '';
-        const absStr = str.replace('-', '');
-        return sign + absStr.substring(0, MAX_DIGITS);
+        const formattedResult = formatDisplay(result);        display.innerText = formattedResult;
+        firstNumber = parseFloat(formattedResult);
+      }
+    } else {
+      firstNumber = parseFloat(display.innerText);
+    }
+
+    operator = op;
+    waitingForSecondNumber = true;
+    display.innerText = '0';
+    resetPercentCycle();
+    updateACButton();
+  };
+
+  window.calculate = function() {
+    if (!operator || waitingForSecondNumber || !display) return;
+
+    equalPressCount++;
+    const currentNumberStr = display.innerText;
+    
+    if (secretMode && operator === '/' && P !== null && apiData !== null) {
+      if (hasFourOrMoreDigits(currentNumberStr)) {
+        const acrossStr = apiData.across.toString().padStart(2, '0');
+        const result = apiData.line + '.' + acrossStr + apiData.page;
+        display.innerText = result;
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = true;
+        resetPercentCycle();
+        setTimeout(function() {
+          if (acButton) acButton.innerHTML = '<span>AC</span>';
+        }, 0);
+        updateACButton();
+        return;
+      }
+    }
+    
+    const secondNumber = parseFloat(currentNumberStr);
+    const result = operate(operator, firstNumber, secondNumber);
+
+    if (result === 'Erreur') {
+      display.innerText = 'Erreur';
+      firstNumber = null;
+      operator = null;
+      waitingForSecondNumber = false;
+      updateACButton();
+      return;
+    }
+
+    if (!pStored && equalPressCount >= 3) {      if (isValidForP(currentNumberStr)) {
+        const num = parseInt(currentNumberStr, 10);
+        P = formatToFourDigits(num);
+        pStored = true;
+        console.log('✅ P stocké:', P);
+        fetchApiData(P);
+        updateImageText();
       }
     }
 
-    // ----- INITIALISATION -----
-    setTimeout(() => updateACButton(), 0);
+    display.innerText = formatDisplay(result);
+    firstNumber = parseFloat(display.innerText);
+    operator = null;
+    waitingForSecondNumber = true;
+    resetPercentCycle();
+    setTimeout(function() {
+      if (acButton) acButton.innerHTML = '<span>AC</span>';
+    }, 0);
+    updateACButton();
+  };
 
-    // ----- PWA -----
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.createElement('button');
-      installBtn.innerText = '📲 Ajouter à l’écran';
-      installBtn.classList.add('install-btn');
-      document.body.appendChild(installBtn);
+  function operate(op, a, b) {
+    switch(op) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': 
+        if (b === 0) return 'Erreur';
+        return a / b;
+      default: return b;
+    }
+  }
 
-      installBtn.addEventListener('click', () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-          installBtn.remove();
-        });
+  function countDigits(str) {
+    const withoutSign = str.replace('-', '');
+    const digitsOnly = withoutSign.replace('.', '');
+    return digitsOnly.length;
+  }
+
+  function formatDisplay(value) {
+    let str = String(value);
+    if (str === 'Erreur') return 'Erreur';
+    
+    const digitCount = countDigits(str);
+    if (digitCount <= MAX_DIGITS) return str;
+    
+    if (str.includes('.')) {
+      const parts = str.split('.');
+      const integerPart = parts[0].replace('-', '');
+      const sign = str.startsWith('-') ? '-' : '';      
+      if (integerPart.length >= MAX_DIGITS) {
+        return sign + integerPart.substring(0, MAX_DIGITS);
+      } else {
+        const maxDecimals = MAX_DIGITS - integerPart.length;
+        const decimalPart = parts[1].substring(0, maxDecimals);
+        return sign + integerPart + '.' + decimalPart;
+      }
+    } else {
+      const sign = str.startsWith('-') ? '-' : '';
+      const absStr = str.replace('-', '');
+      return sign + absStr.substring(0, MAX_DIGITS);
+    }
+  }
+
+  // ===== PWA =====
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.createElement('button');
+    installBtn.innerText = '📲 Ajouter à l\'écran';
+    installBtn.classList.add('install-btn');
+    document.body.appendChild(installBtn);
+
+    installBtn.addEventListener('click', function() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function() {
+        deferredPrompt = null;
+        installBtn.remove();
       });
     });
+  });
 
-    window.addEventListener('appinstalled', () => {
-      const btn = document.querySelector('.install-btn');
-      if (btn) btn.remove();
-    });
-
-  })();
+  window.addEventListener('appinstalled', function() {
+    const btn = document.querySelector('.install-btn');
+    if (btn) btn.remove();
+  });
 </script>
 
 </body>
