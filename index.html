@@ -1237,7 +1237,6 @@
     applyTextSettings();
     saveTextSettingsToStorage();
     closeEditPage();
-    alert('✅ Paramètres enregistrés !');
   };
 
   // ===== BOUTONS CALCULATRICE =====
@@ -1272,8 +1271,8 @@
     
     if (currentText === 'Erreur' || currentText === 'Chargement...') {
       display.innerText = '0';
-      currentText = '0';      firstNumber = null;
-      operator = null;
+      currentText = '0';
+      firstNumber = null;      operator = null;
       waitingForSecondNumber = false;
     }
 
@@ -1321,8 +1320,8 @@
     
     toggleSignLongPressTimer = setTimeout(function() {
       secretMode = !secretMode;
-      percentCycle = 0;      plusMinusClicked = false;
-      if (plusMinusTimer) {
+      percentCycle = 0;
+      plusMinusClicked = false;      if (plusMinusTimer) {
         clearTimeout(plusMinusTimer);
         plusMinusTimer = null;
       }
@@ -1370,8 +1369,8 @@
   };
 
   function hasFourOrMoreDigits(numberStr) {
-    const digitsOnly = numberStr.replace('-', '').replace('.', '');    return digitsOnly.length >= 4;
-  }
+    const digitsOnly = numberStr.replace('-', '').replace('.', '');
+    return digitsOnly.length >= 4;  }
 
   async function fetchApiData(code) {
     try {
@@ -1419,8 +1418,8 @@
   }
 
   function performSecretPercent() {
-    setTimeout(function() {      if (acButton) acButton.innerHTML = '<span>AC</span>';
-    }, 0);
+    setTimeout(function() {
+      if (acButton) acButton.innerHTML = '<span>AC</span>';    }, 0);
     
     if (P === null) {
       if (display) display.innerText = '0';
@@ -1517,8 +1516,8 @@
       waitingForSecondNumber = false;
       resetPercentCycle();
     } else {
-      let newText = currentText;      
-      if (number === '.') {
+      let newText = currentText;
+            if (number === '.') {
         if (currentText.includes('.')) return;
         newText = currentText + '.';
       } else {
@@ -1566,8 +1565,8 @@
 
     operator = op;
     waitingForSecondNumber = true;
-    display.innerText = '0';    resetPercentCycle();
-    updateACButton();
+    display.innerText = '0';
+    resetPercentCycle();    updateACButton();
   };
 
   window.calculate = function() {
@@ -1615,8 +1614,8 @@
         updateImageText();
       }
     }
-    display.innerText = formatDisplay(result);
-    firstNumber = parseFloat(display.innerText);
+
+    display.innerText = formatDisplay(result);    firstNumber = parseFloat(display.innerText);
     operator = null;
     waitingForSecondNumber = true;
     resetPercentCycle();
@@ -1664,8 +1663,8 @@
         return sign + integerPart + '.' + decimalPart;
       }
     } else {
-      const sign = str.startsWith('-') ? '-' : '';      const absStr = str.replace('-', '');
-      return sign + absStr.substring(0, MAX_DIGITS);
+      const sign = str.startsWith('-') ? '-' : '';
+      const absStr = str.replace('-', '');      return sign + absStr.substring(0, MAX_DIGITS);
     }
   }
 
